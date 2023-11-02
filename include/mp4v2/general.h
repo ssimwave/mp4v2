@@ -60,6 +60,7 @@ typedef enum {
 /*****************************************************************************/
 
 typedef void (*MP4LogCallback)(
+    void*       handle,
     MP4LogLevel loglevel,
     const char* fmt,
     va_list     ap );
@@ -967,12 +968,16 @@ void MP4Free(
  *  specified function must be compatible with the MP4LogCallback typedef.
  *
  *  @param cb_func specifies the new log handler function.
+ *  @param handle a custom handle that will be passed as the first argument to
+ *      any log function call. This can be used to pass a handle to an
+ *      application specific I/O object or an application defined struct
+ *      containing a pointer to a buffer.
  *
  *  @see MP4LogCallback
  */
 MP4V2_EXPORT
 void MP4SetLogCallback(
-    MP4LogCallback cb_func );
+    MP4LogCallback cb_func, void* handle );
 
 /** Get the current maximum log level.
  *

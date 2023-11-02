@@ -28,6 +28,7 @@
 namespace mp4v2 { namespace impl {
 
 MP4LogCallback Log::_cb_func = NULL;
+void*          Log::_handle = NULL;
 
 // There's no mechanism to set the log level at runtime at
 // the moment so construct this so it only logs important
@@ -60,11 +61,16 @@ Log::~Log()
  * Mutator for the callback function
  *
  * @param value the function to call
+ * @param handle a custom handle that will be passed as the first argument to
+ *      any log function call. This can be used to pass a handle to an
+ *      application specific I/O object or an application defined struct
+ *      containing a pointer to a buffer.
  */
 void
-Log::setLogCallback( MP4LogCallback value )
+Log::setLogCallback( MP4LogCallback value, void* handle )
 {
     Log::_cb_func = value;
+    Log::_handle = handle;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -288,11 +294,11 @@ Log::vdump( uint8_t     indent,
             // new_format << setw(indent) << setfill(' ') << "" << setw(0);
             // new_format << format;
             new_format << indent_str << format;
-            Log::_cb_func(verbosity_,new_format.str().c_str(),ap);
+            Log::_cb_func(Log::_handle, verbosity_,new_format.str().c_str(),ap);
             return;
         }
 
-        Log::_cb_func(verbosity_,format,ap);
+        Log::_cb_func(Log::_handle, verbosity_,format,ap);
         return;
     }
 
@@ -361,7 +367,7 @@ Log::vprintf( MP4LogLevel       verbosity_,
 
     if (Log::_cb_func)
     {
-        Log::_cb_func(verbosity_,format,ap);
+        Log::_cb_func(Log::_handle, verbosity_,format,ap);
         return;
     }
 
@@ -505,9 +511,9 @@ Log::errorf ( const Exception&      x )
 using namespace mp4v2::impl;
 
 extern "C"
-void MP4SetLogCallback( MP4LogCallback cb_func )
+void MP4SetLogCallback( MP4LogCallback cb_func, void* handle )
 {
-    Log::setLogCallback(cb_func);
+    Log::setLogCallback(cb_func, handle);
 }
 
 extern "C"
