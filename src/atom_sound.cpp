@@ -44,6 +44,10 @@ MP4SoundAtom::MP4SoundAtom(MP4File &file, const char *atomid)
         ExpectChildAtom("alac", Optional, Optional);
         //AddProperty( new MP4BytesProperty(*this, "alacInfo", 36));
     }
+    ExpectChildAtom("frma", Optional, OnlyOne);
+    ExpectChildAtom("chan", Optional, OnlyOne);
+    ExpectChildAtom("chnl", Optional, OnlyOne);
+
 }
 
 void MP4SoundAtom::AddProperties (uint8_t version)
