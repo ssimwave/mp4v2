@@ -738,6 +738,41 @@ MP4Atom* MP4File::FindAtom(const char* name)
     return pAtom;
 }
 
+bool MP4File::GetAtomDetails(const char* atomName, const char** type, uint8_t* extendedType,
+                          uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+{
+    auto atom = FindAtom(atomName);
+    if (atom != nullptr) {
+        atom->GetDetails(type, extendedType, start, end, dataSize, flags);
+        return true;
+    }
+    return false;
+}
+
+bool MP4File::GetChildCount(const char* atomName, uint32_t* retVal)
+{
+    auto atom = FindAtom(atomName);
+    if (atom != nullptr) {
+        *retVal =  atom->GetNumberOfChildAtoms();
+        return true;
+    }
+    return false;
+}
+
+bool MP4File::GetChildDetails(const char* atomName, uint32_t index,
+                           const char** type, uint8_t* extendedType,
+                           uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+{
+    auto atom = FindAtom(atomName);
+    if (atom == nullptr || index >= atom->GetNumberOfChildAtoms()) {
+        return false;
+    }
+
+    auto child = atom->GetChildAtom(index);
+    child->GetDetails(type, extendedType, start, end, dataSize, flags);
+    return true;   
+}
+
 MP4Atom* MP4File::AddChildAtom(
     const char* parentName,
     const char* childName)
@@ -820,6 +855,67 @@ bool MP4File::FindProperty(const char* name,
     if( pIndex )
         *pIndex = 0; // set the default answer for index
     return m_pRootAtom->FindProperty(name, ppProperty, pIndex);
+}
+
+bool MP4File::HaveProperty(const char* propertyName)
+{
+    MP4Property* pProperty;
+    return FindProperty(propertyName, &pProperty);
+}
+
+bool MP4File::GetPropertyCount(const char* atomName, uint32_t* retVal)
+{
+    auto atom = FindAtom(atomName);
+    if (atom != nullptr) {
+        *retVal =  atom->GetCount();
+        return true;
+    }
+    return false;
+}
+
+bool MP4File::GetPropertyDetails(const char* atomName, uint32_t index,
+                              const char** propertyName, char* propertyType)
+{
+    auto atom = FindAtom(atomName);
+    if (atom == nullptr) {
+        return false;
+    }
+
+    if (index >= atom->GetCount()) {
+        ostringstream msg;
+        msg << "property index out of bounds - index " << index << " count " << atom->GetCount();
+        throw new EXCEPTION(msg.str());
+    }
+
+    auto property = atom->GetProperty(index);
+    *propertyName = property->GetName();
+    if (propertyType != nullptr) {
+        switch (property->GetType()) {
+            case Integer8Property:
+            case Integer16Property:
+            case Integer24Property:
+            case Integer32Property:
+            case Integer64Property:
+                strcpy(propertyType, "integer");
+                break;
+            case Float32Property:
+                strcpy(propertyType, "float");
+                break;
+            case Float64Property:
+                strcpy(propertyType, "double");
+                break;
+            case StringProperty:
+                strcpy(propertyType, "string");
+                break;
+            case BytesProperty:
+                strcpy(propertyType, "bytes");
+                break;
+            default:
+                strcpy(propertyType, "unknown");
+                break;
+        }
+    }
+    return true;
 }
 
 void MP4File::FindIntegerProperty(const char* name,
@@ -3209,6 +3305,48 @@ MP4Atom *MP4File::FindTrackAtom (MP4TrackId trackId, const char *name)
     return FindAtom(MakeTrackName(trackId, name));
 }
 
+bool MP4File::GetTrackAtomDetails(MP4TrackId trackId, const char* atomName,
+                                  const char** type, uint8_t* extendedType,
+                                  uint64_t* start, uint64_t* end, uint64_t* dataSize,
+                                  uint32_t* flags)
+{
+    return GetAtomDetails(MakeTrackName(trackId, atomName),
+                          type, extendedType,
+                          start, end, dataSize, flags);
+}
+
+bool MP4File::GetTrackChildCount(MP4TrackId trackId, const char* atomName, uint32_t* retVal)
+{
+    return GetChildCount(MakeTrackName(trackId, atomName), retVal);
+}
+
+bool MP4File::GetTrackChildDetails(MP4TrackId trackId, const char* atomName, uint32_t index,
+                                const char** type, uint8_t* extendedType,
+                                uint64_t* start, uint64_t* end, uint64_t* dataSize,
+                                uint32_t* flags)
+{
+        return GetChildDetails(MakeTrackName(trackId, atomName), index,
+                               type, extendedType,
+                               start, end, dataSize, flags);
+}
+
+bool MP4File::HaveTrackProperty (MP4TrackId trackId, const char *name)
+{
+    return HaveProperty(MakeTrackName(trackId, name));
+}
+
+bool MP4File::GetTrackPropertyCount (MP4TrackId trackId, const char* atomName, uint32_t* retVal)
+{
+    return GetPropertyCount(MakeTrackName(trackId, atomName), retVal);
+}
+
+bool MP4File::GetTrackPropertyDetails (MP4TrackId trackId,
+                                    const char* atomName, uint32_t index,
+                                    const char** propertyName, char* propertyType)
+{
+    return GetPropertyDetails(MakeTrackName(trackId, atomName), index, propertyName, propertyType);    
+}
+
 uint64_t MP4File::GetTrackIntegerProperty(MP4TrackId trackId, const char* name)
 {
     return GetIntegerProperty(MakeTrackName(trackId, name));
@@ -3229,6 +3367,11 @@ void MP4File::SetTrackFloatProperty(MP4TrackId trackId, const char* name,
                                     float value)
 {
     SetFloatProperty(MakeTrackName(trackId, name), value);
+}
+
+double MP4File::GetTrackDoubleProperty(MP4TrackId trackId, const char* name)
+{
+    return GetDoubleProperty(MakeTrackName(trackId, name));
 }
 
 void MP4File::SetTrackDoubleProperty(MP4TrackId trackId, const char* name,

@@ -612,6 +612,158 @@ bool MP4HaveTrackAtom(
     MP4TrackId    trackId,
     const char*   atomName );
 
+/** Get details about the track atom (type, size, etc.).
+ *
+ *  MP4GetTrackAtomDetails retrieves details for the track atom
+ *  identified by @p atomName, and @p trackID e.g. "mdia.minf".
+ *  Atom details includes the atom's type, size, file position, and flags.
+ *  The return values are stored in the variables pointed to by
+ *  @p type, @p extendedType, @p start, @p end, @p dataSize, and @p flags.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param atomName path to the atom.
+ *  @param type pointer to a variable to receive the atom type.
+ *  @param extendedType pointer to a variable to receive the atom's extended type.
+ *  @param start pointer to a variable to receive the atom's start file position.
+ *  @param end pointer to a variable to receive the atom's end file position.
+ *  @param dataSize pointer to a variable to receive the atom's data size (minus headers).
+ *  @param flags pointer to a variable to receive the atom flags.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetTrackAtomDetails(
+    MP4FileHandle hFile,
+    MP4TrackId    trackId,
+    const char*   atomName,
+    const char**  type,
+    uint8_t*      extendedType DEFAULT(NULL),
+    uint64_t*     start DEFAULT(NULL),
+    uint64_t*     end DEFAULT(NULL),
+    uint64_t*     dataSize DEFAULT(NULL),
+    uint32_t*     flags DEFAULT(NULL));
+
+/** Get the track atom's child atom count.
+ *
+ *  MP4GetTrackChildCount retrieves the total number of child atoms
+ *  for the track atom identified by @p atomName, and @p trackID e.g. "mdia.minf".
+ *  The value is stored in the variable pointed to by @p retVal.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param atomName path to the atom.
+ *  @param retVal pointer to a variable to receive the return value.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetTrackChildCount(
+    MP4FileHandle hFile,
+    MP4TrackId    trackId,
+    const char*   atomName,
+    uint32_t*     retVal );
+
+/** Get details about the track child atom (type, size, etc.).
+ *
+ *  MP4GetTrackChildDetails retrieves details for the track atom
+ *  identified by @p atomName, @p trackID, and @p index e.g. "mdia.minf".
+ *  Atom details includes the atom's type, size, file position, and flags.
+ *  The return values are stored in the variables pointed to by
+ *  @p type, @p extendedType, @p start, @p end, @p dataSize, and @p flags.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param atomName path to the atom.
+ *  @param index index of the property to get.
+ *  @param type pointer to a variable to receive the atom type.
+ *  @param extendedType pointer to a variable to receive the atom's extended type.
+ *  @param start pointer to a variable to receive the atom's start file position.
+ *  @param end pointer to a variable to receive the atom's end file position.
+ *  @param dataSize pointer to a variable to receive the atom's data size (minus headers).
+ *  @param flags pointer to a variable to receive the atom flags.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetTrackChildDetails(
+    MP4FileHandle hFile,
+    MP4TrackId    trackId,
+    const char*   atomName,
+    uint32_t      index,
+    const char**  type,
+    uint8_t*      extendedType DEFAULT(NULL),
+    uint64_t*     start DEFAULT(NULL),
+    uint64_t*     end DEFAULT(NULL),
+    uint64_t*     dataSize DEFAULT(NULL),
+    uint32_t*     flags DEFAULT(NULL));
+
+/** Check for presence of a track property.
+ *
+ *  MP4HaveTrackProperty checks for the presence of the track property passed in @p
+ *  name. @p name can specify an atom path to check for atoms that are
+ *  not direct children of the @b trak atom, e.g. "mdia.minf.stbl".
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param name name of the property to check for.
+ *
+ *  @return true (1) if the atom is present, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4HaveTrackProperty(
+    MP4FileHandle   hFile,
+    MP4TrackId      trackId,
+    const char*     name );
+
+/** Get the track atom's total property count.
+ *
+ *  MP4GetTrackPropertyCount retrieves the total number of properties
+ *  for the track atom identified by @p atomName and @p trackId, e.g. "mdia.minf.stbl".
+ *  The value is stored in the variable pointed to by @p retVal.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param atomName path to the atom.
+ *  @param retVal pointer to a variable to receive the return value.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetTrackPropertyCount(
+    MP4FileHandle   hFile,
+    MP4TrackId      trackId,
+    const char*     atomName,
+    uint32_t*       retVal );
+
+/** Get a track atom's property name and type by index.
+ *
+ *  MP4GetPropertyDetails retrieves the name and type of the property
+ *  identified by @p atomName and @p index, e.g. "moov.iods".
+ *  The value is stored in the variables pointed to by @p propertyName
+ *  and @p propertyType.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param atomName path to the atom.
+ *  @param index index of the property to get.
+ *  @param propertyName pointer to a variable to receive the property name.
+ *  @param propertyType pointer to a char buffer to receive the property type.
+ *      the buffer must be large enough to hold the property type string.
+ *      the returned propertyType string will be one of the following values:
+ *          "integer", "float", "double", "string", "bytes", "unknown"
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetTrackPropertyDetails(
+    MP4FileHandle hFile,
+    MP4TrackId    trackId,
+    const char*   atomName,
+    uint32_t      index,
+    const char**  propertyName,
+    char*         propertyType DEFAULT(NULL));
+
 /** Get the value of an integer property for a track.
  *
  *  MP4GetTrackIntegerProperty determines the value of the integer property
@@ -651,6 +803,26 @@ bool MP4GetTrackFloatProperty(
     MP4TrackId    trackId,
     const char*   propName,
     float*        retVal );
+
+/** Get the value of a double property for a track.
+ *
+ *  MP4GetTrackDoubleProperty determines the value of the double property
+ *  identified by @p propName, e.g. "tkhd.volume", for the track identified by
+ *  @p trackId. The value is stored in the variable pointed to by @p retVal.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param propName path to the property to get.
+ *  @param retVal pointer to a variable to receive the return value.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetTrackDoubleProperty(
+    MP4FileHandle hFile,
+    MP4TrackId    trackId,
+    const char*   propName,
+    double*       retVal );
 
 /** Get the value of a string property for a track.
  *

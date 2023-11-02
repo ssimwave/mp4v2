@@ -105,6 +105,17 @@ public:
     void Check64BitStatus(const char *atomName);
     /* file properties */
 
+    bool GetChildCount(const char* atomName, uint32_t* retVal);
+    bool GetChildDetails(const char* atomName, uint32_t index,
+                      const char** type, uint8_t* extendedType = NULL,
+                      uint64_t* start = NULL, uint64_t* end = NULL,
+                      uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
+    bool HaveProperty(const char* name);
+    bool GetPropertyCount(const char* atomName, uint32_t* retVal);
+    bool GetPropertyDetails(const char* atomName, uint32_t index,
+                         const char** propertyName, char* propertyType = NULL);
+
     uint64_t GetIntegerProperty(const char* name);
     float GetFloatProperty(const char* name);
     double GetDoubleProperty(const char* name);
@@ -161,6 +172,23 @@ public:
 
     /* track properties */
     MP4Atom *FindTrackAtom(MP4TrackId trackId, const char *name);
+    bool GetTrackAtomDetails(MP4TrackId trackId, const char* atomName,
+                          const char** type, uint8_t* extendedType = NULL,
+                          uint64_t* start = NULL, uint64_t* end = NULL,
+                          uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
+    bool GetTrackChildCount(MP4TrackId trackId, const char* atomName, uint32_t* retVal);
+    bool GetTrackChildDetails(MP4TrackId trackId, const char* atomName, uint32_t index,
+                           const char** type, uint8_t* extendedType = NULL,
+                           uint64_t* start = NULL, uint64_t* end = NULL,
+                           uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
+    bool HaveTrackProperty (MP4TrackId trackId, const char* name);
+    bool GetTrackPropertyCount(MP4TrackId trackId, const char* atomName, uint32_t* retVal);
+    bool GetTrackPropertyDetails(MP4TrackId trackId,
+                              const char* atomName, uint32_t index,
+                              const char** propertyName, char* propertyType = NULL);
+
     uint64_t GetTrackIntegerProperty(
         MP4TrackId trackId, const char* name);
     float GetTrackFloatProperty(
@@ -842,6 +870,11 @@ public:
     void UpdateDuration(MP4Duration duration);
 
     MP4Atom* FindAtom(const char* name);
+
+    bool GetAtomDetails(const char* atomName,
+                     const char** type, uint8_t* extendedType = NULL,
+                     uint64_t* start = NULL, uint64_t* end = NULL,
+                     uint64_t* dataSize = NULL, uint32_t* flags = NULL);
 
     MP4Atom* AddChildAtom(
         const char* parentName,

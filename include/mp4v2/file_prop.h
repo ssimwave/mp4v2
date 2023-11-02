@@ -50,6 +50,146 @@ bool MP4HaveAtom(
     MP4FileHandle hFile,
     const char*   atomName );
 
+/** Get details about the atom (type, size, etc.).
+ *
+ *  MP4GetAtomDetails retrieves details for the atom
+ *  identified by @p atomName, e.g. "moov".
+ *  Atom details includes the atom's type, size, file position, and flags.
+ *  The return values are stored in the variables pointed to by
+ *  @p type, @p extendedType, @p start, @p end, @p dataSize, and @p flags.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param atomName path to the atom.
+ *  @param type pointer to a variable to receive the atom type.
+ *  @param extendedType pointer to a variable to receive the atom's extended type.
+ *  @param start pointer to a variable to receive the atom's start file position.
+ *  @param end pointer to a variable to receive the atom's end file position.
+ *  @param dataSize pointer to a variable to receive the atom's data size (minus headers).
+ *  @param flags pointer to a variable to receive the atom flags.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetAtomDetails(
+    MP4FileHandle hFile,
+    const char*   atomName,
+    const char**  type,
+    uint8_t*      extendedType DEFAULT(NULL),
+    uint64_t*     start DEFAULT(NULL),
+    uint64_t*     end DEFAULT(NULL),
+    uint64_t*     dataSize DEFAULT(NULL),
+    uint32_t*     flags DEFAULT(NULL));
+
+/** Get the atom's child atom count.
+ *
+ *  MP4GetChildCount retrieves the total number of child atoms
+ *  for the atom identified by @p atomName, e.g. "moov".
+ *  The value is stored in the variable pointed to by @p retVal.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param atomName path to the atom.
+ *  @param retVal pointer to a variable to receive the return value.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetChildCount(
+    MP4FileHandle hFile,
+    const char*   atomName,
+    uint32_t*     retVal );
+
+/** Get details about the child atom (type, size, etc.).
+ *
+ *  MP4GetChildDetails retrieves details for the child atom
+ *  identified by @p atomName, and @p index e.g. "moov".
+ *  Atom details includes the atom's type, size, file position, and flags.
+ *  The return values are stored in the variables pointed to by
+ *  @p type, @p extendedType, @p start, @p end, @p dataSize, and @p flags.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param atomName path to the atom.
+ *  @param index index of the child atom to get.
+ *  @param type pointer to a variable to receive the atom type.
+ *  @param extendedType pointer to a variable to receive the atom's extended type.
+ *  @param start pointer to a variable to receive the atom's start file position.
+ *  @param end pointer to a variable to receive the atom's end file position.
+ *  @param dataSize pointer to a variable to receive the atom's data size (minus headers).
+ *  @param flags pointer to a variable to receive the atom flags.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetChildDetails(
+    MP4FileHandle hFile,
+    const char*   atomName,
+    uint32_t      index,
+    const char**  type,
+    uint8_t*      extendedType DEFAULT(NULL),
+    uint64_t*     start DEFAULT(NULL),
+    uint64_t*     end DEFAULT(NULL),
+    uint64_t*     dataSize DEFAULT(NULL),
+    uint32_t*     flags DEFAULT(NULL));
+
+/** Check for presence of a property.
+ *
+ *  MP4HaveProperty checks for the presence of the property passed in @p propertyName.
+ *  @p propertyName can specify an atom path to check for atoms that are not top level
+ *  atoms, e.g. "moov.udta.meta.ilst".
+ *
+ *  @param hFile handle of file for operation.
+ *  @param propertyName name of the property to check for.
+ *
+ *  @return true (1) if the atom is present, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4HaveProperty(
+    MP4FileHandle hFile,
+    const char*   propertyName );
+
+/** Get the atom's total property count.
+ *
+ *  MP4GetPropertyCount retrieves the total number of properties
+ *  for the atom identified by @p atomName, e.g. "moov.iods".
+ *  The value is stored in the variable pointed to by @p retVal.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param atomName path to the atom.
+ *  @param retVal pointer to a variable to receive the return value.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetPropertyCount(
+    MP4FileHandle hFile,
+    const char*   atomName,
+    uint32_t*     retVal );
+
+/** Get an atom's property name and type by index.
+ *
+ *  MP4GetPropertyDetails retrieves the name and type of the property
+ *  identified by @p atomName and @p index, e.g. "moov.iods".
+ *  The values are stored in the variables pointed to by @p propertyName
+ *  and @p propertyType.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param atomName path to the atom.
+ *  @param index index of the property to get.
+ *  @param propertyName pointer to a variable to receive the property name.
+ *  @param propertyType pointer to a char buffer to receive the property type.
+ *      the buffer must be large enough to hold the property type string.
+ *      the returned propertyType string will be one of the following values:
+ *          "integer", "float", "double", "string", "bytes", "unknown"
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetPropertyDetails(
+    MP4FileHandle hFile,
+    const char*   atomName,
+    uint32_t      index,
+    const char**  propertyName,
+    char*         propertyType DEFAULT(NULL));
+
 /** Get the value of an integer property.
  *
  *  MP4GetIntegerProperty determines the value of the integer property
@@ -85,6 +225,25 @@ bool MP4GetFloatProperty(
     MP4FileHandle hFile,
     const char*   propName,
     float*        retVal );
+
+/** Get the value of a float property.
+ *
+ *  MP4GetDoubleProperty determines the value of the double property identified
+ *  by @p propName, e.g. "mdia.minf.stbl.stsd.lpcm.timeScale".
+ *  The value is stored in the variable pointed to by @p retVal.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param propName path to the property to get.
+ *  @param retVal pointer to a variable to receive the return value.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+MP4V2_EXPORT
+bool MP4GetDoubleProperty(
+    MP4FileHandle hFile,
+    const char*   propName,
+    double*       retVal );
+
 
 /** Get the value of a string property.
  *

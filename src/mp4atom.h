@@ -121,6 +121,29 @@ public:
         memcpy(m_extendedType, pExtendedType, sizeof(m_extendedType));
     };
 
+    void GetDetails(const char** type, uint8_t* extendedType,
+                        uint64_t* start, uint64_t* end,
+                        uint64_t* dataSize, uint32_t* flags) {
+        if (type) {
+            *type = GetType();
+        }
+        if (extendedType) {
+            GetExtendedType(extendedType);
+        }
+        if (start) {
+            *start = GetStart();
+        }
+        if (end) {
+            *end = GetEnd();
+        }
+        if (dataSize) {
+            *dataSize = GetSize();
+        }
+        if (flags) {
+            *flags = (GetCount() >= 2) ? GetFlags() : 0;
+        }
+    }
+
     bool IsUnknownType() {
         return m_unknownType;
     }
