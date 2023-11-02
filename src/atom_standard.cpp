@@ -220,11 +220,31 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
         ExpectChildAtom("mdhd", Required, OnlyOne);
         ExpectChildAtom("hdlr", Required, OnlyOne);
         ExpectChildAtom("minf", Required, OnlyOne);
+        ExpectChildAtom("meta", Optional, OnlyOne);
 
     } else if (ATOMID(type) == ATOMID("meta")) { // iTunes
-        AddVersionAndFlags(); /* 0, 1 */
+        // Old QT file format:
+        //      Does not have version and flags
+        //      Requires 'hdlr', 'keys', and 'ilst' child atoms
+        // ISO file format:
+        //      Extends full box atom with version and flags
+        //      Requires only 'hdlr' child atom
+        bool oldQTFormat = true;
+        if (m_File.FindAtom("ftyp") != NULL) {
+            const char* fileType = m_File.GetStringProperty("ftyp.majorBrand");
+            if (!strequal(fileType, "qt  ")) {
+                oldQTFormat = false;
+            }
+        }
+
         ExpectChildAtom("hdlr", Required, OnlyOne);
-        ExpectChildAtom("ilst", Required, OnlyOne);
+        if (oldQTFormat) {
+            ExpectChildAtom("keys", Required, OnlyOne);
+            ExpectChildAtom("ilst", Required, OnlyOne);
+        }
+        else {
+            AddVersionAndFlags();   /* 0, 1 */
+        }
 
     } else if (ATOMID(type) == ATOMID("mfhd")) {
         AddVersionAndFlags();   /* 0, 1 */
@@ -250,6 +270,7 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
         ExpectChildAtom("trak", Required, Many);
         ExpectChildAtom("udta", Optional, Many);
         ExpectChildAtom("mvex", Optional, OnlyOne);
+        ExpectChildAtom("meta", Optional, OnlyOne);
 
     } else if (ATOMID(type) == ATOMID("mvex")) {
         ExpectChildAtom("trex", Required, Many);
@@ -375,6 +396,7 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
         ExpectChildAtom("edts", Optional, OnlyOne);
         ExpectChildAtom("mdia", Required, OnlyOne);
         ExpectChildAtom("udta", Optional, Many);
+        ExpectChildAtom("meta", Optional, OnlyOne);
 
     } else if (ATOMID(type) == ATOMID("tref")) {
         ExpectChildAtom("chap", Optional, OnlyOne);

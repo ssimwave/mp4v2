@@ -39,6 +39,7 @@ MP4RootAtom::MP4RootAtom(MP4File &file)
     ExpectChildAtom( "skip", Optional, Many );
     ExpectChildAtom( "udta", Optional, Many );
     ExpectChildAtom( "moof", Optional, Many );
+    ExpectChildAtom( "meta", Optional, OnlyOne ); // MP4 file format
 }
 
 void MP4RootAtom::BeginWrite(bool use64)
