@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(MP4v2 VERSION 2.1.3)
+project(MP4v2 VERSION 2.2.0)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -222,6 +222,7 @@ set(MP4V2_SOURCE_FILES
         src/atom_d263.cpp
         src/atom_dac3.cpp
         src/atom_damr.cpp
+        src/atom_dec3.cpp
         src/atom_dref.cpp
         src/atom_elst.cpp
         src/atom_enca.cpp

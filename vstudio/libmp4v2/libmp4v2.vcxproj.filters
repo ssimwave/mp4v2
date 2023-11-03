@@ -275,6 +275,9 @@
     <ClCompile Include="..\..\src\atom_damr.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\atom_dec3.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\atom_dref.cpp">
       <Filter>src</Filter>
     </ClCompile>

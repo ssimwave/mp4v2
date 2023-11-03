@@ -13,6 +13,7 @@
 		E17F2FFE27A74CD400F7FBDF /* atom_colr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E17F2F7127A7460C00F7FBDF /* atom_colr.cpp */; };
 		E17F2FFF27A74CD400F7FBDF /* atom_rtp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E17F2F2E27A7460900F7FBDF /* atom_rtp.cpp */; };
 		E17F300027A74CD400F7FBDF /* atom_dac3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E17F2F7A27A7460C00F7FBDF /* atom_dac3.cpp */; };
+		E17F300037A74CD400F7FBDF /* atom_dec3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E17F2F7A37A7460C00F7FBDF /* atom_dec3.cpp */; };
 		E17F300127A74CD400F7FBDF /* atom_ftab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E17F2F4327A7460A00F7FBDF /* atom_ftab.cpp */; };
 		E17F300227A74CD400F7FBDF /* atom_treftype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E17F2F3227A7460900F7FBDF /* atom_treftype.cpp */; };
 		E17F300327A74CD400F7FBDF /* exception.h in Headers */ = {isa = PBXBuildFile; fileRef = E17F2F4627A7460A00F7FBDF /* exception.h */; };
@@ -553,6 +554,7 @@
 		E17F2F7827A7460C00F7FBDF /* mp4container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mp4container.cpp; path = ../src/mp4container.cpp; sourceTree = "<group>"; };
 		E17F2F7927A7460C00F7FBDF /* atom_standard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = atom_standard.cpp; path = ../src/atom_standard.cpp; sourceTree = "<group>"; };
 		E17F2F7A27A7460C00F7FBDF /* atom_dac3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = atom_dac3.cpp; path = ../src/atom_dac3.cpp; sourceTree = "<group>"; };
+		E17F2F7A37A7460C00F7FBDF /* atom_dec3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = atom_dec3.cpp; path = ../src/atom_dec3.cpp; sourceTree = "<group>"; };
 		E17F2F7B27A7460D00F7FBDF /* mp4file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mp4file.cpp; path = ../src/mp4file.cpp; sourceTree = "<group>"; };
 		E17F2F7C27A7460D00F7FBDF /* odcommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = odcommands.h; path = ../src/odcommands.h; sourceTree = "<group>"; };
 		E17F2F7D27A7460D00F7FBDF /* atom_root.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = atom_root.cpp; path = ../src/atom_root.cpp; sourceTree = "<group>"; };
@@ -782,6 +784,7 @@
 				E17F2F4227A7460A00F7FBDF /* atom_d263.cpp */,
 				E17F2F7A27A7460C00F7FBDF /* atom_dac3.cpp */,
 				E17F2F4727A7460A00F7FBDF /* atom_damr.cpp */,
+				E17F2F7A37A7460C00F7FBDF /* atom_dec3.cpp */,				
 				E17F2F6827A7460C00F7FBDF /* atom_dref.cpp */,
 				E17F2F4F27A7460A00F7FBDF /* atom_elst.cpp */,
 				E17F2F5327A7460B00F7FBDF /* atom_enca.cpp */,
@@ -1431,6 +1434,7 @@
 				E17F2FFE27A74CD400F7FBDF /* atom_colr.cpp in Sources */,
 				E17F301E27A74CD400F7FBDF /* isma.cpp in Sources */,
 				E17F300027A74CD400F7FBDF /* atom_dac3.cpp in Sources */,
+				E17F300037A74CD400F7FBDF /* atom_dec3.cpp in Sources */,
 				E17F302D27A74CD400F7FBDF /* atom_encv.cpp in Sources */,
 				E17F309627A74D1C00F7FBDF /* random_posix.cpp in Sources */,
 				E17F307027A74CE200F7FBDF /* type.cpp in Sources */,

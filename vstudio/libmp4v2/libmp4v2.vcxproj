@@ -701,6 +701,7 @@
     <ClCompile Include="..\..\src\atom_d263.cpp" />
     <ClCompile Include="..\..\src\atom_dac3.cpp" />
     <ClCompile Include="..\..\src\atom_damr.cpp" />
+    <ClCompile Include="..\..\src\atom_dec3.cpp" />
     <ClCompile Include="..\..\src\atom_dref.cpp" />
     <ClCompile Include="..\..\src\atom_elst.cpp" />
     <ClCompile Include="..\..\src\atom_enca.cpp" />

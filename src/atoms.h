@@ -157,10 +157,9 @@ private:
 
 // H.264 atoms
 
-class MP4Avc1Atom : public MP4Atom {
+class MP4Avc1Atom : public MP4VideoAtom {
 public:
     MP4Avc1Atom(MP4File &file);
-    void Generate();
 private:
     MP4Avc1Atom();
     MP4Avc1Atom( const MP4Avc1Atom &src );
@@ -230,14 +229,22 @@ private:
     MP4Mp4aAtom &operator= ( const MP4Mp4aAtom &src );
 };
 
-class MP4Ac3Atom : public MP4Atom {
+class MP4Ac3Atom : public MP4SoundAtom {
 public:
     MP4Ac3Atom(MP4File &file);
-    void Generate();
 private:
     MP4Ac3Atom();
     MP4Ac3Atom( const MP4Ac3Atom &src );
     MP4Ac3Atom &operator= ( const MP4Ac3Atom &src );
+};
+
+class MP4Eac3Atom : public MP4SoundAtom {
+public:
+    MP4Eac3Atom(MP4File &file);
+private:
+    MP4Eac3Atom();
+    MP4Eac3Atom( const MP4Eac3Atom &src );
+    MP4Eac3Atom &operator= ( const MP4Eac3Atom &src );
 };
 
 class MP4DAc3Atom : public MP4Atom {
@@ -251,6 +258,18 @@ private:
     MP4DAc3Atom &operator= ( const MP4DAc3Atom &src );
 };
 
+class MP4DEc3Atom : public MP4Atom {
+public:
+    MP4DEc3Atom(MP4File &file);
+    void Generate();
+    void Read();
+    void Dump(uint8_t indent, bool dumpImplicits);
+private:
+    MP4DEc3Atom();
+    MP4DEc3Atom( const MP4DEc3Atom &src );
+    MP4DEc3Atom &operator= ( const MP4DEc3Atom &src );
+};
+
 class MP4Mp4sAtom : public MP4Atom {
 public:
     MP4Mp4sAtom(MP4File &file);
@@ -261,10 +280,9 @@ private:
     MP4Mp4sAtom &operator= ( const MP4Mp4sAtom &src );
 };
 
-class MP4Mp4vAtom : public MP4Atom {
+class MP4Mp4vAtom : public MP4VideoAtom {
 public:
     MP4Mp4vAtom(MP4File &file);
-    void Generate();
 private:
     MP4Mp4vAtom();
     MP4Mp4vAtom( const MP4Mp4vAtom &src );

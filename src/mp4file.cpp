@@ -1652,12 +1652,12 @@ MP4TrackId MP4File::AddAC3AudioTrack(
     // Set Ac3 settings
     MP4Integer16Property* pSampleRateProperty = NULL;
     FindIntegerProperty(
-        MakeTrackName(trackId, "mdia.minf.stbl.stsd.ac-3.samplingRate"),
+        MakeTrackName(trackId, "mdia.minf.stbl.stsd.ac-3.timeScale"),
         (MP4Property**)&pSampleRateProperty);
     if (pSampleRateProperty) {
         pSampleRateProperty->SetValue(samplingRate);
     } else {
-        throw new EXCEPTION("no ac-3.samplingRate property");
+        throw new EXCEPTION("no ac-3.timeScale property");
     }
 
     MP4BitfieldProperty* pBitfieldProperty = NULL;
