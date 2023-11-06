@@ -52,10 +52,10 @@ void MP4ColrAtom::Generate()
 void MP4ColrAtom::Read()
 {
     /* read base properties */
-    ReadProperties(0);
+    bool success = ReadProperties(0);
 
     /* add color range property if colorParameterType == nclx */
-    if (strequal("nclx", ((MP4StringProperty*)GetProperty(0))->GetValue())) {
+    if (success && strequal("nclx", ((MP4StringProperty*)GetProperty(0))->GetValue())) {
         AddProperty( /* 4 */ new MP4BitfieldProperty(*this,"colorRange", 1));
         AddProperty( /* 5 */ new MP4BitfieldProperty(*this,"reserved", 7));
 

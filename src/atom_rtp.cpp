@@ -121,7 +121,10 @@ void MP4RtpAtom::ReadStsdType()
 
 void MP4RtpAtom::ReadHntiType()
 {
-    ReadProperties(0, 1);
+    bool success = ReadProperties(0, 1);
+    if (!success) {
+        return;
+    }
 
     // read sdp string, length is implicit in size of atom
     uint64_t size = GetEnd() - m_File.GetPosition();

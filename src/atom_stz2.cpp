@@ -70,34 +70,43 @@ MP4Stz2Atom::MP4Stz2Atom(MP4File &file)
 
 void MP4Stz2Atom::Read()
 {
-    ReadProperties(0, 4);
+    bool success = ReadProperties(0, 4);
+    if (success) {
+        uint8_t fieldSize =
+            ((MP4Integer8Property *)m_pProperties[3])->GetValue();
+        //  uint32_t sampleCount = 0;
 
-    uint8_t fieldSize =
-        ((MP4Integer8Property *)m_pProperties[3])->GetValue();
-    //  uint32_t sampleCount = 0;
+        if (fieldSize != 4 && fieldSize != 8 && fieldSize != 16) {
+            LOG_FORMATTED_TRACK_ERROR(INVALID_PROPERTY_VALUE_ERROR("stz2.fieldSize"), 
+                ErrorLocation(), GetTrackId(), "invalid field size. Expected = 4, 8, or 16, Actual =  %d", fieldSize);
 
-    MP4Integer32Property* pCount =
-        (MP4Integer32Property *)m_pProperties[4];
+            Skip(); // to end of atom
+            return;
+        }
 
-    MP4TableProperty *pTable;
-    if (fieldSize != 4) {
-        pTable = new MP4TableProperty(*this, "entries", pCount);
-    } else {
-        // 4 bit field size uses a special table.
-        pTable = new MP4HalfSizeTableProperty(*this, "entries", pCount);
+        MP4Integer32Property* pCount =
+            (MP4Integer32Property *)m_pProperties[4];
+
+        MP4TableProperty *pTable;
+        if (fieldSize != 4) {
+            pTable = new MP4TableProperty(*this, "entries", pCount);
+        } else {
+            // 4 bit field size uses a special table.
+            pTable = new MP4HalfSizeTableProperty(*this, "entries", pCount);
+        }
+
+        AddProperty(pTable);
+
+        if (fieldSize == 16) {
+            pTable->AddProperty( /* 5/0 */
+                new MP4Integer16Property(*this, "entrySize"));
+        } else {
+            pTable->AddProperty( /* 5/0 */
+                new MP4Integer8Property(*this, "entrySize"));
+        }
+
+        ReadProperties(4);
     }
-
-    AddProperty(pTable);
-
-    if (fieldSize == 16) {
-        pTable->AddProperty( /* 5/0 */
-            new MP4Integer16Property(*this, "entrySize"));
-    } else {
-        pTable->AddProperty( /* 5/0 */
-            new MP4Integer8Property(*this, "entrySize"));
-    }
-
-    ReadProperties(4);
 
     Skip(); // to end of atom
 }

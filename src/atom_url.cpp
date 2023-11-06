@@ -36,10 +36,10 @@ MP4UrlAtom::MP4UrlAtom(MP4File &file, const char *type)
 void MP4UrlAtom::Read()
 {
     // read the version and flags properties
-    ReadProperties(0, 2);
+    bool success = ReadProperties(0, 2);
 
     // check if self-contained flag is set
-    if (!(GetFlags() & 1)) {
+    if (success && !(GetFlags() & 1)) {
         // if not then read url location
         ReadProperties(2);
     }

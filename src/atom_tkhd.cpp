@@ -128,13 +128,14 @@ void MP4TkhdAtom::Generate()
 void MP4TkhdAtom::Read()
 {
     /* read atom version */
-    ReadProperties(0, 1);
+    bool success = ReadProperties(0, 1);
+    if (success) {
+        /* need to create the properties based on the atom version */
+        AddProperties(GetVersion());
 
-    /* need to create the properties based on the atom version */
-    AddProperties(GetVersion());
-
-    /* now we can read the remaining properties */
-    ReadProperties(1);
+        /* now we can read the remaining properties */
+        ReadProperties(1);
+    }
 
     Skip(); // to end of atom
 }
