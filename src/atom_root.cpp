@@ -39,7 +39,16 @@ MP4RootAtom::MP4RootAtom(MP4File &file)
     ExpectChildAtom( "skip", Optional, Many );
     ExpectChildAtom( "udta", Optional, Many );
     ExpectChildAtom( "moof", Optional, Many );
+    ExpectChildAtom( "mfra", Optional, OnlyOne ); // MP4 file format
+    ExpectChildAtom( "pdin", Optional, OnlyOne ); // ISO2 file format
     ExpectChildAtom( "meta", Optional, OnlyOne ); // MP4 file format
+    ExpectChildAtom( "meco", Optional, OnlyOne ); // MP4 file format
+    ExpectChildAtom( "styp", Optional, Many ); // MP4 file format
+    ExpectChildAtom( "sidx", Optional, Many ); // MP4 file format
+    ExpectChildAtom( "ssix", Optional, Many ); // MP4 file format
+    ExpectChildAtom( "prft", Optional, Many ); // MP4 file format
+    ExpectChildAtom( "wide", Optional, Many ); // QT file format
+    ExpectChildAtom( "pnot", Optional, Many ); // QT file format
 }
 
 void MP4RootAtom::BeginWrite(bool use64)

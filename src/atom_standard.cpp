@@ -218,9 +218,10 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
 
     } else if (ATOMID(type) == ATOMID("mdia")) {
         ExpectChildAtom("mdhd", Required, OnlyOne);
-        ExpectChildAtom("hdlr", Required, OnlyOne);
+        ExpectChildAtom("hdlr", Required, OnlyOne); // ISO file format
         ExpectChildAtom("minf", Required, OnlyOne);
         ExpectChildAtom("meta", Optional, OnlyOne);
+        ExpectChildAtom("elng", Optional, OnlyOne);
 
     } else if (ATOMID(type) == ATOMID("meta")) { // iTunes
         // Old QT file format:
@@ -244,7 +245,14 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
         }
         else {
             AddVersionAndFlags();   /* 0, 1 */
+            ExpectChildAtom("iloc", Optional, OnlyOne); // ISO2 file format
+            ExpectChildAtom("ipro", Optional, OnlyOne); // ISO2 file format
+            ExpectChildAtom("iinf", Optional, OnlyOne); // ISO2 file format
+            ExpectChildAtom("xml ", Optional, OnlyOne); // ISO2 file format
+            ExpectChildAtom("bxml", Optional, OnlyOne); // ISO2 file format
+            ExpectChildAtom("pitm", Optional, OnlyOne); // ISO2 file format
         }
+        ExpectChildAtom("dinf", Optional, OnlyOne);
 
     } else if (ATOMID(type) == ATOMID("mfhd")) {
         AddVersionAndFlags();   /* 0, 1 */
@@ -257,6 +265,8 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
         ExpectChildAtom("hmhd", Optional, OnlyOne);
         ExpectChildAtom("nmhd", Optional, OnlyOne);
         ExpectChildAtom("gmhd", Optional, OnlyOne);
+        ExpectChildAtom("sthd", Optional, OnlyOne);
+        ExpectChildAtom("hdlr", Optional, OnlyOne); // QT file format
         ExpectChildAtom("dinf", Required, OnlyOne);
         ExpectChildAtom("stbl", Required, OnlyOne);
 
@@ -274,6 +284,7 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
 
     } else if (ATOMID(type) == ATOMID("mvex")) {
         ExpectChildAtom("trex", Required, Many);
+        ExpectChildAtom("mehd", Optional, OnlyOne);
 
         /*
          * n???
@@ -405,6 +416,13 @@ MP4StandardAtom::MP4StandardAtom (MP4File &file, const char *type) : MP4Atom(fil
         ExpectChildAtom("ipir", Optional, OnlyOne);
         ExpectChildAtom("mpod", Optional, OnlyOne);
         ExpectChildAtom("sync", Optional, OnlyOne);
+        ExpectChildAtom("cdsc", Optional, OnlyOne);
+        ExpectChildAtom("font", Optional, OnlyOne);
+        ExpectChildAtom("hind", Optional, OnlyOne);
+        ExpectChildAtom("vdep", Optional, OnlyOne);
+        ExpectChildAtom("vplx", Optional, OnlyOne);
+        ExpectChildAtom("subt", Optional, OnlyOne);
+        ExpectChildAtom("tmcd", Optional, OnlyOne);
 
     } else if (ATOMID(type) == ATOMID("trex")) {
         AddVersionAndFlags();   /* 0, 1 */

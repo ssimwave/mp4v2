@@ -62,6 +62,8 @@ MP4StsdAtom::MP4StsdAtom(MP4File &file)
     ExpectChildAtom("text", Optional, Many);
     ExpectChildAtom("tx3g", Optional, Many);
     ExpectChildAtom("ac-3", Optional, Many);
+    ExpectChildAtom("ec-3", Optional, Many);
+    ExpectChildAtom("tmcd", Optional, Many);
 }
 
 void MP4StsdAtom::Read()
@@ -81,6 +83,10 @@ void MP4StsdAtom::Read()
         pCount->SetReadOnly(false);
         pCount->SetValue(m_pChildAtoms.Size());
         pCount->SetReadOnly(true);
+    }
+
+    if (pCount->GetValue() == 0) {
+        LOG_FORMATTED_TRACK_ERROR(SPECIFICATION_ERROR, ErrorLocation(), GetTrackId(), "stsd has no entries.");
     }
 }
 
