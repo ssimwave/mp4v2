@@ -86,9 +86,11 @@ MP4Atom* MP4Atom::CreateAtom( MP4File &file, MP4Atom* parent, const char* type )
 MP4TrackId MP4Atom::GetTrackId(MP4Atom *atom) {
     MP4TrackId trackId = MP4_INVALID_TRACK_ID;
 
-    const uint32_t id = ATOMID("trak");
+    uint32_t id = ATOMID("trak");
     while (atom != NULL) {
-        if( id == ATOMID(atom->GetType()) ) {
+        const char *testType = atom->GetType();
+        uint32_t testID = ATOMID(testType);
+        if(id == testID) {
             MP4Property* pProperty;
 
             if (atom->FindProperty("trak.tkhd.trackId", &pProperty)) {
@@ -107,9 +109,11 @@ std::string MP4Atom::ErrorLocation(MP4Atom *atom)
 {
     std::string location = "Container";
 
-    const uint32_t id = ATOMID("trak");
+    uint32_t id = ATOMID("trak");
     while (atom != NULL) {
-        if( id == ATOMID(atom->GetType()) ) {
+        const char *testType = atom->GetType();
+        uint32_t testID = ATOMID(testType);
+        if(id == testID) {
             MP4Property* pProperty;
 
             if (atom->FindProperty("trak.mdia.hdlr.handlerType", &pProperty)) {
