@@ -53,7 +53,7 @@ void MP4DrefAtom::Read()
     if (m_pChildAtoms.Size() != pCount->GetValue()) {
         std::string errormsg = std::string("Inconsistency in number of entries. Expected = ") + std::to_string(m_pChildAtoms.Size()) +
                                std::string(" Actual = ") + std::to_string(pCount->GetValue());
-        MP4File::AddParsingError(this, INVALID_PROPERTY_VALUE_ERROR("dref.entryCount"), errormsg);
+        GetFile().AddParsingError(this, INVALID_PROPERTY_VALUE_ERROR("dref.entryCount"), errormsg);
 
         /* fix it */
         pCount->SetReadOnly(false);

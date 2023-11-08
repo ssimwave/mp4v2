@@ -155,7 +155,8 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
             if (m_stsz_sample_bits != 4 && m_stsz_sample_bits != 8 && m_stsz_sample_bits != 16) {
                 std::string errorMsg = std::string("invalid field size. Expected = 4, 8, or 16, Actual =  ") +
                                                    std::to_string(m_stsz_sample_bits);
-                MP4File::AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stz2.fieldSize"), errorMsg);
+
+                file.AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stz2.fieldSize"), errorMsg);
             }
 
             m_have_stz2_4bit_sample = (m_stsz_sample_bits == 4);
@@ -289,7 +290,7 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
             std::string errormsg = std::string("Inconsistency in number of entries. Expected = ") +
                                    std::to_string(stsd->GetNumberOfChildAtoms()) +
                                    std::string(" Actual = ") + std::to_string(stsdCount);
-            MP4File::AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stsd.entryCount"), errormsg);
+            file.AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stsd.entryCount"), errormsg);
 
             /* fix it */
             stsdProperty->SetReadOnly(false);
@@ -298,13 +299,13 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
         }
 
         if (stsdProperty->GetValue() == 0) {
-            MP4File::AddParsingError(&m_trakAtom, SPECIFICATION_ERROR, "stsd has no entries.");
+            file.AddParsingError(&m_trakAtom, SPECIFICATION_ERROR, "stsd has no entries.");
         }
     }
 
     // was everything found?
     if (!success && m_trackId != MP4_INVALID_TRACK_ID) {
-        MP4File::AddParsingError(&m_trakAtom, MALFORMED_ATOM_ERROR("trak"), "Invalid track");
+        file.AddParsingError(&m_trakAtom, MALFORMED_ATOM_ERROR("trak"), "Invalid track");
         //throw new EXCEPTION("invalid track");
     }
     CalculateBytesPerSample();

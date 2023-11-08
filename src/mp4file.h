@@ -904,7 +904,7 @@ public:
         MP4Atom* pAncestorAtom,
         const char* childName);
 
-    static void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
+    void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
 
 protected:
     void Init();
@@ -1054,7 +1054,7 @@ protected:
         std::string errorMsg;
         MP4LogLevel level;
     } ParsingError;
-    static std::list<ParsingError> m_parsingErrors;
+    std::list<ParsingError> m_parsingErrors;
 
  private:
     MP4File ( const MP4File &src );

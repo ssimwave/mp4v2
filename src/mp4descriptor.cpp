@@ -138,7 +138,7 @@ bool MP4Descriptor::ReadProperties(MP4File& file,
             } else {
                 ostringstream oss;
                 oss << "overrun at property '" << pProperty->GetName() << "'. descriptor size = " << m_size;
-                MP4File::AddParsingError(&m_parentAtom, MALFORMED_DESCRIPTOR_ERROR(std::to_string(m_tag)), oss.str());
+                file.AddParsingError(&m_parentAtom, MALFORMED_DESCRIPTOR_ERROR(std::to_string(m_tag)), oss.str());
 
                 // Delete this property and any subsequent properties
                 // Reset the file position to the end of the descriptor, and continue parsing

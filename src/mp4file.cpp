@@ -502,7 +502,7 @@ void MP4File::GenerateTracks()
             for (MP4ArrayIndex i = 0; i < m_trakIds.Size(); i++) {
                 if (m_trakIds[i] == trackID) {
                     std::string errorMsg = std::string("Duplicate track id ") + std::to_string(pTrackIdProperty->GetValue());
-                    MP4File::AddParsingError(m_pRootAtom, SPECIFICATION_ERROR, errorMsg);
+                    AddParsingError(m_pRootAtom, SPECIFICATION_ERROR, errorMsg);
                 }
             }
 
@@ -511,7 +511,7 @@ void MP4File::GenerateTracks()
                 if (m_odTrackId == MP4_INVALID_TRACK_ID) {
                     m_odTrackId = trackID;
                 } else {
-                    MP4File::AddParsingError(m_pRootAtom, SPECIFICATION_ERROR, "Multiple OD tracks present", MP4_LOG_WARNING);
+                    AddParsingError(m_pRootAtom, SPECIFICATION_ERROR, "Multiple OD tracks present", MP4_LOG_WARNING);
                 }
             }
 
@@ -551,8 +551,6 @@ void MP4File::CacheProperties()
     FindIntegerProperty("moov.mvhd.duration",
                         (MP4Property**)&m_pDurationProperty);
 }
-
-std::list<MP4File::ParsingError> MP4File::m_parsingErrors;
 
 void MP4File::AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level)
 {
@@ -2831,14 +2829,14 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
         MP4Integer32Property * pCounter = 0;
         if (!pChpl->FindProperty("chpl.chaptercount", (MP4Property **)&pCounter))
         {
-            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chaptercount"), "Nero chapter count does not exist");
+            AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chaptercount"), "Nero chapter count does not exist");
             return MP4ChapterTypeNone;
         }
 
         uint32_t counter = pCounter->GetValue();
         if (0 == counter)
         {
-            MP4File::AddParsingError(pChpl, INVALID_PROPERTY_VALUE_ERROR("moov.udta.chpl.chpl.chaptercount"), "Nero chapter count is zero", MP4_LOG_WARNING);
+            AddParsingError(pChpl, INVALID_PROPERTY_VALUE_ERROR("moov.udta.chpl.chpl.chaptercount"), "Nero chapter count is zero", MP4_LOG_WARNING);
             return MP4ChapterTypeNone;
         }
 
@@ -2850,18 +2848,18 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
 
         if (!pChpl->FindProperty("chpl.chapters", (MP4Property **)&pTable))
         {
-            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "Nero chapter list does not exist");
+            AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "Nero chapter list does not exist");
             return MP4ChapterTypeNone;
         }
 
         if (0 == (pStartTime = (MP4Integer64Property *) pTable->GetProperty(0)))
         {
-            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "List of Chapter starttimes does not exist");
+            AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "List of Chapter starttimes does not exist");
             return MP4ChapterTypeNone;
         }
         if (0 == (pName = (MP4StringProperty *) pTable->GetProperty(1)))
         {
-            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "List of Chapter titles does not exist");
+            AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "List of Chapter titles does not exist");
             return MP4ChapterTypeNone;
         }
 
