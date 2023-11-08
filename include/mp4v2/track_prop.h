@@ -60,7 +60,7 @@
  *  @param hFile handle of file for operation.
  *  @param trackId id of track for operation.
  *
- *  @return On success, a string indicating track type. On failure, NULL.
+ *  @return On success, a string indicating track type. On failure, empty string.
  */
 MP4V2_EXPORT
 const char* MP4GetTrackType(
@@ -76,7 +76,7 @@ const char* MP4GetTrackType(
  *  @param trackId specifies the track for which the media data atom name is
  *      desired.
  *
- *  @return The name of the track's media data atom or NULL in case of an
+ *  @return The name of the track's media data atom or empty string in case of an
  *      error.
  */
 MP4V2_EXPORT

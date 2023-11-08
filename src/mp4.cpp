@@ -65,7 +65,7 @@ extern "C" {
 const char* MP4GetFilename( MP4FileHandle hFile )
 {
     if (!MP4_IS_VALID_FILE_HANDLE(hFile))
-        return NULL;
+        return "";
     try
     {
         ASSERT(hFile);
@@ -82,7 +82,7 @@ const char* MP4GetFilename( MP4FileHandle hFile )
                                 "filename", __FUNCTION__ );
     }
 
-    return NULL;
+    return "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1270,7 +1270,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     MP4TrackId MP4AddVideoTrack(
@@ -2435,7 +2435,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
     const char* MP4GetTrackMediaDataName(
         MP4FileHandle hFile, MP4TrackId trackId)
@@ -2452,7 +2452,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     bool MP4GetTrackMediaDataOriginalFormat(
@@ -3274,6 +3274,23 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
 
     /* sample operations */
 
+    const char* MP4GetSampleFileURL(MP4FileHandle hFile, MP4TrackId trackId, MP4SampleId sampleId)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File*)hFile)->GetSampleFileURL(trackId, sampleId).c_str();
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return "";
+    }
+
     bool MP4ReadSample(
         /* input parameters */
         MP4FileHandle hFile,
@@ -3847,7 +3864,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     bool MP4SetSessionSdp(
@@ -3906,7 +3923,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     bool MP4SetHintTrackSdp(

@@ -47,6 +47,25 @@ typedef enum MP4SampleDependencyType_e {
     _MP4_SDT_RESERVED                     = 0x80 /**< reserved */
 } MP4SampleDependencyType;
 
+/** Retrieves external sample file name.
+ *
+ *  MP4GetSampleFileURL retrieves the filename for
+ *  the external track sample file if referenced.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param sampleId specifies which sample is to be read.
+ *      Caveat: the first sample has id <b>1</b> not <b>0</b>.
+ *
+ *  @return filename of external sample file if referenced,
+ *          emptry string if sample is self-contained, or "Error" on error.
+ *
+ *  @see MP4GetSampleSize()
+ *  @see MP4GetTrackMaxSampleSize()
+ */
+MP4V2_EXPORT
+const char* MP4GetSampleFileURL(MP4FileHandle hFile, MP4TrackId trackId, MP4SampleId sampleId);
+
 /** Read a track sample.
  *
  *  MP4ReadSample reads the specified sample from the specified track.
