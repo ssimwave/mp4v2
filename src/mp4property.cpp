@@ -1029,13 +1029,14 @@ void MP4DescriptorProperty::Read(MP4File& file, uint32_t index)
         pDescriptor->Read(file);
     }
 
-    // warnings
+    // Errors
+    char errorMsg[80];
     if (m_mandatory && m_pDescriptors.Size() == 0) {
-        log.warningf("%s: \"%s\": Mandatory descriptor 0x%02x missing",
-                     __FUNCTION__, GetParentAtom().GetFile().GetFilename().c_str(), m_tagsStart);
+        sprintf(errorMsg, "Mandatory descriptor 0x%02x missing", m_tagsStart);
+        MP4File::AddParsingError(&m_parentAtom, SPECIFICATION_ERROR, errorMsg);
     } else if (m_onlyOne && m_pDescriptors.Size() > 1) {
-        log.warningf("%s: \"%s\": Descriptor 0x%02x has more than one instance",
-                     __FUNCTION__, GetParentAtom().GetFile().GetFilename().c_str(), m_tagsStart);
+        sprintf(errorMsg, "Only one descriptor 0x%02x allowed", m_tagsStart);
+        MP4File::AddParsingError(&m_parentAtom, SPECIFICATION_ERROR, errorMsg);
     }
 }
 

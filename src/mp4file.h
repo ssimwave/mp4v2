@@ -239,6 +239,8 @@ public:
     bool GetSampleSync(
         MP4TrackId trackId, MP4SampleId sampleId);
 
+    std::string GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId);
+
     void ReadSample(
         // input parameters
         MP4TrackId trackId,
@@ -902,6 +904,8 @@ public:
         MP4Atom* pAncestorAtom,
         const char* childName);
 
+    static void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
+
 protected:
     void Init();
 
@@ -1012,6 +1016,8 @@ protected:
         uint8_t** ppBytes,
         uint64_t* pNumBytes);
 
+    void LogParsingErrors();
+
 protected:
     File*    m_file;
     uint64_t m_fileOriginalSize;
@@ -1041,6 +1047,14 @@ protected:
 
     char m_trakName[1024];
     char m_editName[1024];
+
+    typedef struct ParsingError_s {
+        MP4Atom *atom;
+        std::string category;
+        std::string errorMsg;
+        MP4LogLevel level;
+    } ParsingError;
+    static std::list<ParsingError> m_parsingErrors;
 
  private:
     MP4File ( const MP4File &src );

@@ -73,11 +73,12 @@ void MP4Descriptor::Read(MP4File& file)
 {
     ReadHeader(file);
 
-    ReadProperties(file, 0, m_readMutatePoint);
+    bool success = ReadProperties(file, 0, m_readMutatePoint);
+    if (success) {
+        Mutate();
 
-    Mutate();
-
-    ReadProperties(file, m_readMutatePoint);
+        ReadProperties(file, m_readMutatePoint);
+    }
 
     // flush any leftover read bits
     file.FlushReadBits();
@@ -102,7 +103,7 @@ void MP4Descriptor::ReadHeader(MP4File& file)
                   file.GetFilename().c_str(), m_tag, m_size, m_size);
 }
 
-void MP4Descriptor::ReadProperties(MP4File& file,
+bool MP4Descriptor::ReadProperties(MP4File& file,
                                    uint32_t propStartIndex, uint32_t propCount)
 {
     uint32_t numProperties = min(propCount,
@@ -135,12 +136,24 @@ void MP4Descriptor::ReadProperties(MP4File& file,
                     pProperty->Dump(0, true);
                 }
             } else {
-                log.errorf("%s: \"%s\": Overran descriptor, tag %u data size %u property %u",
-                           __FUNCTION__, file.GetFilename().c_str(), m_tag, m_size, i);
-                throw new EXCEPTION("overran descriptor");
+                ostringstream oss;
+                oss << "overrun at property '" << pProperty->GetName() << "'. descriptor size = " << m_size;
+                MP4File::AddParsingError(&m_parentAtom, MALFORMED_DESCRIPTOR_ERROR(std::to_string(m_tag)), oss.str());
+
+                // Delete this property and any subsequent properties
+                // Reset the file position to the end of the descriptor, and continue parsing
+                for (uint32_t j = m_pProperties.Size() - 1; j >= i; j--) {
+                    m_pProperties.Delete(j);
+                }
+                file.SetPosition(m_start + m_size);
+
+                //throw new EXCEPTION("overran descriptor");
+                return false;
             }
         }
     }
+
+    return true;
 }
 
 void MP4Descriptor::Write(MP4File& file)

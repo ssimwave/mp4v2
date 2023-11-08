@@ -504,11 +504,80 @@ Log::errorf ( const Exception&      x )
     this->printf(MP4_LOG_ERROR,"%s",x.msg().c_str());
 }
 
+std::string Log::formatMsg(const std::string& format, va_list args) {
+    std::string ret;
+
+    // Calculate the length of the formatted string
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int length = vsnprintf(nullptr, 0, format.c_str(), args_copy);
+    va_end(args_copy);
+
+    if (length <= 0) {
+        return ret;
+    }
+    else if (length == (int)format.size()) {
+        return format;
+    }
+
+    // Format the message
+    char *msg = new char[length+1];
+    vsnprintf(msg, length+1, format.c_str(), args);
+
+    ret = msg;
+    delete [] msg;
+    return ret;
+}
+
+std::string Log::formatMsg(const std::string& category, const std::string& location, const std::string& format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    std::string ret = category + ": " + location + ": " + formatMsg(format, args);
+
+    va_end(args);
+    return ret;
+}
+
+std::string Log::formatTrackMsg(const std::string& category, const std::string& location, MP4TrackId trackID, const std::string& format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    std::string ret = category + ": " + location + ": " + "Track " + to_string(trackID) + ": " + formatMsg(format, args);
+
+    va_end(args);
+    return ret;
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 }} // namespace mp4v2::impl
 
 using namespace mp4v2::impl;
+
+std::string std::to_string(MP4LogLevel level) {
+    switch (level) {
+        case MP4_LOG_NONE:
+            return "NONE";
+        case MP4_LOG_ERROR:
+            return "ERROR";
+        case MP4_LOG_WARNING:
+            return "WARNING";
+        case MP4_LOG_INFO:
+            return "INFO";
+        case MP4_LOG_VERBOSE1:
+            return "VERBOSE1";
+        case MP4_LOG_VERBOSE2:
+            return "VERBOSE2";
+        case MP4_LOG_VERBOSE3:
+            return "VERBOSE3";
+        case MP4_LOG_VERBOSE4:
+            return "VERBOSE4";
+        default:
+            return "UNKNOWN";
+    }
+}
 
 extern "C"
 void MP4SetLogCallback( MP4LogCallback cb_func, void* handle )
