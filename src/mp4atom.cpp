@@ -62,6 +62,8 @@ MP4Atom::~MP4Atom()
 {
     uint32_t i;
 
+    LogAtomError("Read", "Destroying atom", MP4_LOG_INFO);
+
     for (i = 0; i < m_pProperties.Size(); i++) {
         delete m_pProperties[i];
     }
@@ -102,14 +104,7 @@ MP4TrackId MP4Atom::GetTrackId() {
         }
 */
 
-        if (m_pParentAtom == NULL) {
-            break;
-        }
-        else {
-            atom = m_pParentAtom;
-        }
-
-        //atom = atom->GetParentAtom();
+        atom = atom->GetParentAtom();
     }
 
     (void)id;
@@ -303,6 +298,7 @@ MP4Atom* MP4Atom::ReadAtom(MP4File& file, MP4Atom* pParentAtom)
     }
     catch (Exception*) {
         // delete atom and return NULL
+        pAtom->LogAtomError("Read", "Exception caught while reading atom!", MP4_LOG_ERROR);
         delete pAtom;
         pAtom = NULL;
     }

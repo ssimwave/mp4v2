@@ -79,6 +79,7 @@ void MP4HdlrAtom::Read()
             ReadProperties(5);
         }
         catch(Exception* x) { 
+            LogAtomError("Read", "Exception caught while reading hdlr atom!", MP4_LOG_ERROR);
             if( m_File.GetPosition() - GetEnd() == 1 )
                 delete x;
             else

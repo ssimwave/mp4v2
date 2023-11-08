@@ -76,6 +76,8 @@ void MP4File::Init()
 
 MP4File::~MP4File()
 {
+    m_pRootAtom->LogAtomError("Read", "Destroying root atom", MP4_LOG_ERROR);
+
     delete m_pRootAtom;
     for( uint32_t i = 0; i < m_pTracks.Size(); i++ )
         delete m_pTracks[i];
