@@ -86,6 +86,7 @@ MP4Atom* MP4Atom::CreateAtom( MP4File &file, MP4Atom* parent, const char* type )
 MP4TrackId MP4Atom::GetTrackId(MP4Atom *atom) {
     MP4TrackId trackId = MP4_INVALID_TRACK_ID;
 
+/*
     uint32_t id = ATOMID("trak");
     while (atom != NULL) {
         const char *testType = atom->GetType();
@@ -101,6 +102,7 @@ MP4TrackId MP4Atom::GetTrackId(MP4Atom *atom) {
 
         atom = atom->GetParentAtom();
     }
+*/
 
     return trackId;
 }
@@ -109,6 +111,7 @@ std::string MP4Atom::ErrorLocation(MP4Atom *atom)
 {
     std::string location = "Container";
 
+/*
     uint32_t id = ATOMID("trak");
     while (atom != NULL) {
         const char *testType = atom->GetType();
@@ -128,6 +131,7 @@ std::string MP4Atom::ErrorLocation(MP4Atom *atom)
 
         atom = atom->GetParentAtom();
     }
+*/
 
     return location;
 }
