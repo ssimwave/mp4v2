@@ -70,24 +70,6 @@ void MP4StsdAtom::Read()
 {
     /* do the usual read */
     MP4Atom::Read();
-
-    // check that number of children == entryCount
-    MP4Integer32Property* pCount =
-        (MP4Integer32Property*)m_pProperties[2];
-
-    if (m_pChildAtoms.Size() != pCount->GetValue()) {
-        log.warningf("%s: \"%s\": stsd inconsistency with number of entries",
-                     __FUNCTION__, GetFile().GetFilename().c_str() );
-
-        /* fix it */
-        pCount->SetReadOnly(false);
-        pCount->SetValue(m_pChildAtoms.Size());
-        pCount->SetReadOnly(true);
-    }
-
-    if (pCount->GetValue() == 0) {
-        LOG_FORMATTED_TRACK_ERROR(SPECIFICATION_ERROR, ErrorLocation(), GetTrackId(), "stsd has no entries.");
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

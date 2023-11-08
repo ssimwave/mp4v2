@@ -77,9 +77,6 @@ void MP4Stz2Atom::Read()
         //  uint32_t sampleCount = 0;
 
         if (fieldSize != 4 && fieldSize != 8 && fieldSize != 16) {
-            LOG_FORMATTED_TRACK_ERROR(INVALID_PROPERTY_VALUE_ERROR("stz2.fieldSize"), 
-                ErrorLocation(), GetTrackId(), "invalid field size. Expected = 4, 8, or 16, Actual =  %d", fieldSize);
-
             Skip(); // to end of atom
             return;
         }
