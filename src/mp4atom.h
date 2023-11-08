@@ -229,9 +229,9 @@ public:
 
     // Retrieve track ID from this atom if it's a track atom,
     // or from parent track atom if present.
-    static MP4TrackId GetTrackId(MP4Atom *atom);
-    static std::string ErrorLocation(MP4Atom *atom);
-    static void LogAtomError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
+    MP4TrackId GetTrackId();
+    std::string ErrorLocation();
+    void LogAtomError(const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
 
 protected:
     void AddProperty(MP4Property* pProperty);

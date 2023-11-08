@@ -565,7 +565,7 @@ void MP4File::AddParsingError(MP4Atom *atom, const std::string& category, const 
 void MP4File::LogParsingErrors()
 {
     for (auto& error : m_parsingErrors) {
-        MP4Atom::LogAtomError(error.atom, error.category, error.errorMsg, error.level);
+        error.atom->LogAtomError(error.category, error.errorMsg, error.level);
     }
 }
 

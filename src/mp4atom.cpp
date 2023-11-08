@@ -83,8 +83,9 @@ MP4Atom* MP4Atom::CreateAtom( MP4File &file, MP4Atom* parent, const char* type )
 //
 // Error log helper functions
 //
-MP4TrackId MP4Atom::GetTrackId(MP4Atom *atom) {
+MP4TrackId MP4Atom::GetTrackId() {
     MP4TrackId trackId = MP4_INVALID_TRACK_ID;
+    MP4Atom *atom = this;
 
     uint32_t id = ATOMID("trak");
     while (atom != NULL) {
@@ -109,11 +110,13 @@ MP4TrackId MP4Atom::GetTrackId(MP4Atom *atom) {
     return trackId;
 }
 
-std::string MP4Atom::ErrorLocation(MP4Atom *atom)
+std::string MP4Atom::ErrorLocation()
 {
     std::string location = "Container";
 
 /*
+    MP4Atom *atom = this;
+
     uint32_t id = ATOMID("trak");
     while (atom != NULL) {
         const char *testType = atom->GetType();
@@ -138,15 +141,15 @@ std::string MP4Atom::ErrorLocation(MP4Atom *atom)
     return location;
 }
 
-void MP4Atom::LogAtomError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level) {
+void MP4Atom::LogAtomError(const std::string& category, const std::string& errorMsg, MP4LogLevel level) {
     // Determine if atom belongs to a track, and retrieve track ID if available
-    MP4TrackId trackID = GetTrackId(atom);
+    MP4TrackId trackID = GetTrackId();
 
     if (trackID == MP4_INVALID_TRACK_ID) {
-        LOG_FORMATTED_MSG(level, category, ErrorLocation(atom), errorMsg.c_str());
+        LOG_FORMATTED_MSG(level, category, ErrorLocation(), errorMsg.c_str());
     }
     else {
-        LOG_FORMATTED_TRACK_MSG(level, category, ErrorLocation(atom), trackID, errorMsg.c_str());
+        LOG_FORMATTED_TRACK_MSG(level, category, ErrorLocation(), trackID, errorMsg.c_str());
     }
 }
 
