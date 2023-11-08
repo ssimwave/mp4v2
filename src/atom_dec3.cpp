@@ -41,7 +41,9 @@ MP4DEc3Atom::MP4DEc3Atom(MP4File &file)
     AddProperty( new MP4BitfieldProperty(*this, "lfeon", 1)); /* 6 */
     AddProperty( new MP4BitfieldProperty(*this, "reserved", 3)); /* 7 */
     AddProperty( new MP4BitfieldProperty(*this, "num_dep_sub", 4)); /* 8 */
+    AddProperty( new MP4BitfieldProperty(*this, "reserved", 1)); /* 9 */
     m_pProperties[7]->SetReadOnly(true);
+    m_pProperties[9]->SetReadOnly(true);
 }
 
 void MP4DEc3Atom::Generate()
@@ -49,9 +51,6 @@ void MP4DEc3Atom::Generate()
     MP4Atom::Generate();
  
     ((MP4BitfieldProperty*)m_pProperties[8])->SetValue(0);
-    AddProperty( new MP4BitfieldProperty(*this, "reserved", 1)); /* 9 */
-    m_pProperties[9]->SetReadOnly(true);
-
 }
 
 void MP4DEc3Atom::Read()
@@ -60,6 +59,7 @@ void MP4DEc3Atom::Read()
 
     int count = ((MP4BitfieldProperty*)m_pProperties[8])->GetValue();
     if (count > 0) {
+        m_pProperties.Delete(9);
         AddProperty( new MP4BitfieldProperty(*this, "chan_loc", 9)); /* 9 */
         ReadProperties(9); // continue
     }
