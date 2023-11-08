@@ -100,9 +100,16 @@ MP4TrackId MP4Atom::GetTrackId() {
             }
             break;
         }
-*/        
+*/
 
-        atom = atom->GetParentAtom();
+        if (m_pParentAtom == NULL) {
+            break;
+        }
+        else {
+            atom = m_pParentAtom;
+        }
+
+        //atom = atom->GetParentAtom();
     }
 
     (void)id;
