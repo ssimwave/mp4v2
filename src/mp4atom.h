@@ -121,6 +121,29 @@ public:
         memcpy(m_extendedType, pExtendedType, sizeof(m_extendedType));
     };
 
+    void GetDetails(const char** type, uint8_t* extendedType,
+                        uint64_t* start, uint64_t* end,
+                        uint64_t* dataSize, uint32_t* flags) {
+        if (type) {
+            *type = GetType();
+        }
+        if (extendedType) {
+            GetExtendedType(extendedType);
+        }
+        if (start) {
+            *start = GetStart();
+        }
+        if (end) {
+            *end = GetEnd();
+        }
+        if (dataSize) {
+            *dataSize = GetSize();
+        }
+        if (flags) {
+            *flags = (GetCount() >= 2) ? GetFlags() : 0;
+        }
+    }
+
     bool IsUnknownType() {
         return m_unknownType;
     }
@@ -163,10 +186,16 @@ public:
     }
 
     MP4Atom* GetChildAtom(uint32_t index) {
+        if (index >= GetNumberOfChildAtoms()) {
+            return NULL;
+        }
         return m_pChildAtoms[index];
     }
 
     MP4Property* GetProperty(uint32_t index) {
+        if (index >= GetCount()) {
+            return NULL;
+        }
         return m_pProperties[index];
     }
 
@@ -198,6 +227,12 @@ public:
 
     bool GetLargesizeMode();
 
+    // Retrieve track ID from this atom if it's a track atom,
+    // or from parent track atom if present.
+    static MP4TrackId GetTrackId(MP4Atom *atom);
+    static std::string ErrorLocation(MP4Atom *atom);
+    static void LogAtomError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
+
 protected:
     void AddProperty(MP4Property* pProperty);
 
@@ -215,7 +250,7 @@ protected:
     bool FindContainedProperty(const char* name,
                                MP4Property** ppProperty, uint32_t* pIndex);
 
-    void ReadProperties(
+    bool ReadProperties(
         uint32_t startIndex = 0, uint32_t count = 0xFFFFFFFF);
     void ReadChildAtoms();
 

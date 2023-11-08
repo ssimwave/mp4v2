@@ -82,13 +82,15 @@ void MP4MdhdAtom::Generate()
 void MP4MdhdAtom::Read()
 {
     /* read atom version */
-    ReadProperties(0, 1);
+    bool success = ReadProperties(0, 1);
 
-    /* need to create the properties based on the atom version */
-    AddProperties(GetVersion());
+    if (success) {
+        /* need to create the properties based on the atom version */
+        AddProperties(GetVersion());
 
-    /* now we can read the remaining properties */
-    ReadProperties(1);
+        /* now we can read the remaining properties */
+        ReadProperties(1);
+    }
 
     Skip(); // to end of atom
 }

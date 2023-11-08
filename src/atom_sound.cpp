@@ -44,6 +44,10 @@ MP4SoundAtom::MP4SoundAtom(MP4File &file, const char *atomid)
         ExpectChildAtom("alac", Optional, Optional);
         //AddProperty( new MP4BytesProperty(*this, "alacInfo", 36));
     }
+    ExpectChildAtom("frma", Optional, OnlyOne);
+    ExpectChildAtom("chan", Optional, OnlyOne);
+    ExpectChildAtom("chnl", Optional, OnlyOne);
+
 }
 
 void MP4SoundAtom::AddProperties (uint8_t version)
@@ -58,7 +62,9 @@ void MP4SoundAtom::AddProperties (uint8_t version)
         AddProperty( /* 7 */
             new MP4Integer16Property(*this, "packetSize"));
         AddProperty( /* 8 */
-            new MP4Integer32Property(*this, "timeScale"));
+            new MP4Integer16Property(*this, "timeScale"));
+        AddProperty( /* 9 */
+            new MP4Integer16Property(*this, "reserved3"));
     }
     if (version == 1) {
         AddProperty( /* 9 */
@@ -158,9 +164,12 @@ void MP4SoundAtom::Read()
             ReadChildAtoms();
         }
     } else {
-        ReadProperties(0, 3); // read first 3 properties
-        AddProperties(((MP4IntegerProperty *)m_pProperties[2])->GetValue());
-        ReadProperties(3); // continue
+        bool success = ReadProperties(0, 3); // read first 3 properties
+        if (success) {
+            AddProperties(((MP4IntegerProperty *)m_pProperties[2])->GetValue());
+            ReadProperties(3); // continue
+        }
+
         if (m_pChildAtomInfos.Size() > 0) {
             ReadChildAtoms();
         }

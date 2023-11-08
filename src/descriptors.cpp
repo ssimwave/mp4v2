@@ -400,13 +400,19 @@ void MP4SLConfigDescriptor::Read(MP4File& file)
     ReadHeader(file);
 
     // read the first property, 'predefined'
-    ReadProperties(file, 0, 1);
+    bool success = ReadProperties(file, 0, 1);
+    if (!success) {
+        return;
+    }
 
     // if predefined == 0
     if (((MP4Integer8Property*)m_pProperties[0])->GetValue() == 0) {
 
         /* read the next 18 properties */
-        ReadProperties(file, 1, 18);
+        success = ReadProperties(file, 1, 18);
+        if (!success) {
+            return;
+        }
     }
 
     // now mutate
@@ -502,7 +508,10 @@ void MP4ContentIdDescriptor::Read(MP4File& file)
     ReadHeader(file);
 
     /* read the first property, 'compatiblity' */
-    ReadProperties(file, 0, 1);
+    bool success = ReadProperties(file, 0, 1);
+    if (!success) {
+        return;
+    }
 
     /* if compatiblity != 0 */
     if (((MP4Integer8Property*)m_pProperties[0])->GetValue() != 0) {
@@ -512,7 +521,10 @@ void MP4ContentIdDescriptor::Read(MP4File& file)
     }
 
     /* read the next four properties */
-    ReadProperties(file, 1, 4);
+    success = ReadProperties(file, 1, 4);
+    if (!success) {
+        return;
+    }
 
     /* which allows us to reconfigure ourselves */
     Mutate();

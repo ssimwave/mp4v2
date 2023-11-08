@@ -47,16 +47,18 @@ MP4StszAtom::MP4StszAtom(MP4File &file)
 
 void MP4StszAtom::Read()
 {
-    ReadProperties(0, 4);
+    bool success = ReadProperties(0, 4);
+    if (success) {
+        uint32_t sampleSize =
+            ((MP4Integer32Property*)m_pProperties[2])->GetValue();
 
-    uint32_t sampleSize =
-        ((MP4Integer32Property*)m_pProperties[2])->GetValue();
+        // only attempt to read entries table if sampleSize is zero
+        // i.e sample size is not constant
+        m_pProperties[4]->SetImplicit(sampleSize != 0);
 
-    // only attempt to read entries table if sampleSize is zero
-    // i.e sample size is not constant
-    m_pProperties[4]->SetImplicit(sampleSize != 0);
+        ReadProperties(4);
+    }
 
-    ReadProperties(4);
 
     Skip(); // to end of atom
 }

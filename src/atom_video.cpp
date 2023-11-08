@@ -54,7 +54,11 @@ MP4VideoAtom::MP4VideoAtom (MP4File &file, const char *type)
         new MP4Integer16Property(*this, "depth"));
     AddProperty(/* 8 */
         new MP4Integer16Property(*this, "colorTableId"));
+
     ExpectChildAtom("smi ", Optional, OnlyOne);
+    ExpectChildAtom("pasp", Optional, OnlyOne);
+    ExpectChildAtom("clap", Optional, OnlyOne);
+    ExpectChildAtom("fiel", Optional, OnlyOne);
 }
 
 void MP4VideoAtom::Generate()

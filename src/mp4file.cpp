@@ -458,6 +458,9 @@ void MP4File::ReadFromFile()
 
     // create MP4Track's for any tracks in the file
     GenerateTracks();
+
+    // Log any parsing errors we collected along the way
+    LogParsingErrors();
 }
 
 void MP4File::GenerateTracks()
@@ -481,43 +484,50 @@ void MP4File::GenerateTracks()
         (void)pTrakAtom->FindProperty(
             "trak.tkhd.trackId",
             (MP4Property**)&pTrackIdProperty);
+        MP4TrackId trackID = (pTrackIdProperty != NULL) ? pTrackIdProperty->GetValue() : MP4_INVALID_TRACK_ID;
 
         // find track type property
         MP4StringProperty* pTypeProperty = NULL;
         (void)pTrakAtom->FindProperty(
             "trak.mdia.hdlr.handlerType",
             (MP4Property**)&pTypeProperty);
+        bool isHintTrack = (pTypeProperty != NULL && strequal(pTypeProperty->GetValue(), MP4_HINT_TRACK_TYPE));
+        bool isODTrack = (pTypeProperty != NULL && strequal(pTypeProperty->GetValue(), MP4_OD_TRACK_TYPE));
 
-        // ensure we have the basics properties
-        if (pTrackIdProperty && pTypeProperty) {
-
-            m_trakIds.Add(pTrackIdProperty->GetValue());
-
-            MP4Track* pTrack = NULL;
-            try {
-                if (strequal(pTypeProperty->GetValue(), MP4_HINT_TRACK_TYPE)) {
-                    pTrack = new MP4RtpHintTrack(*this, *pTrakAtom);
-                } else {
-                    pTrack = new MP4Track(*this, *pTrakAtom);
+        // Keep track of track IDs
+        if (trackID != MP4_INVALID_TRACK_ID) {
+            // Log an error if there are duplicate track IDs
+            for (MP4ArrayIndex i = 0; i < m_trakIds.Size(); i++) {
+                if (m_trakIds[i] == trackID) {
+                    std::string errorMsg = std::string("Duplicate track id ") + std::to_string(pTrackIdProperty->GetValue());
+                    MP4File::AddParsingError(m_pRootAtom, SPECIFICATION_ERROR, errorMsg);
                 }
-                m_pTracks.Add(pTrack);
-            }
-            catch( Exception* x ) {
-                log.errorf(*x);
-                delete x;
             }
 
-            // remember when we encounter the OD track
-            if (pTrack && strequal(pTrack->GetType(), MP4_OD_TRACK_TYPE)) {
+            // Log an error if there are duplicate OD tracks
+            if (isODTrack) {
                 if (m_odTrackId == MP4_INVALID_TRACK_ID) {
-                    m_odTrackId = pTrackIdProperty->GetValue();
+                    m_odTrackId = trackID;
                 } else {
-                    log.warningf("%s: \"%s\": multiple OD tracks present",
-                                 __FUNCTION__, GetFilename().c_str() );
+                    MP4File::AddParsingError(m_pRootAtom, SPECIFICATION_ERROR, "Multiple OD tracks present", MP4_LOG_WARNING);
                 }
             }
-        } else {
-            m_trakIds.Add(0);
+
+            m_trakIds.Add(trackID);
+        }
+
+        MP4Track* pTrack = NULL;
+        try {
+            if (isHintTrack) {
+                pTrack = new MP4RtpHintTrack(*this, *pTrakAtom);
+            } else {
+                pTrack = new MP4Track(*this, *pTrakAtom);
+            }
+            m_pTracks.Add(pTrack);
+        }
+        catch( Exception* x ) {
+            log.errorf(*x);
+            delete x;
         }
 
         trackIndex++;
@@ -526,6 +536,10 @@ void MP4File::GenerateTracks()
 
 void MP4File::CacheProperties()
 {
+    if (!FindAtom("moov.mvhd")) {
+        return;
+    }
+
     FindIntegerProperty("moov.mvhd.modificationTime",
                         (MP4Property**)&m_pModificationProperty);
 
@@ -534,6 +548,25 @@ void MP4File::CacheProperties()
 
     FindIntegerProperty("moov.mvhd.duration",
                         (MP4Property**)&m_pDurationProperty);
+}
+
+std::list<MP4File::ParsingError> MP4File::m_parsingErrors;
+
+void MP4File::AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level)
+{
+    ParsingError error;
+    error.atom = atom;
+    error.category = category;
+    error.errorMsg = errorMsg;
+    error.level = level;
+    m_parsingErrors.push_back(error);
+}
+
+void MP4File::LogParsingErrors()
+{
+    for (auto& error : m_parsingErrors) {
+        MP4Atom::LogAtomError(error.atom, error.category, error.errorMsg, error.level);
+    }
 }
 
 void MP4File::BeginWrite()
@@ -738,6 +771,41 @@ MP4Atom* MP4File::FindAtom(const char* name)
     return pAtom;
 }
 
+bool MP4File::GetAtomDetails(const char* atomName, const char** type, uint8_t* extendedType,
+                          uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+{
+    auto atom = FindAtom(atomName);
+    if (atom != nullptr) {
+        atom->GetDetails(type, extendedType, start, end, dataSize, flags);
+        return true;
+    }
+    return false;
+}
+
+bool MP4File::GetChildCount(const char* atomName, uint32_t* retVal)
+{
+    auto atom = FindAtom(atomName);
+    if (atom != nullptr) {
+        *retVal =  atom->GetNumberOfChildAtoms();
+        return true;
+    }
+    return false;
+}
+
+bool MP4File::GetChildDetails(const char* atomName, uint32_t index,
+                           const char** type, uint8_t* extendedType,
+                           uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+{
+    auto atom = FindAtom(atomName);
+    if (atom == nullptr || index >= atom->GetNumberOfChildAtoms()) {
+        return false;
+    }
+
+    auto child = atom->GetChildAtom(index);
+    child->GetDetails(type, extendedType, start, end, dataSize, flags);
+    return true;   
+}
+
 MP4Atom* MP4File::AddChildAtom(
     const char* parentName,
     const char* childName)
@@ -820,6 +888,67 @@ bool MP4File::FindProperty(const char* name,
     if( pIndex )
         *pIndex = 0; // set the default answer for index
     return m_pRootAtom->FindProperty(name, ppProperty, pIndex);
+}
+
+bool MP4File::HaveProperty(const char* propertyName)
+{
+    MP4Property* pProperty;
+    return FindProperty(propertyName, &pProperty);
+}
+
+bool MP4File::GetPropertyCount(const char* atomName, uint32_t* retVal)
+{
+    auto atom = FindAtom(atomName);
+    if (atom != nullptr) {
+        *retVal =  atom->GetCount();
+        return true;
+    }
+    return false;
+}
+
+bool MP4File::GetPropertyDetails(const char* atomName, uint32_t index,
+                              const char** propertyName, char* propertyType)
+{
+    auto atom = FindAtom(atomName);
+    if (atom == nullptr) {
+        return false;
+    }
+
+    if (index >= atom->GetCount()) {
+        ostringstream msg;
+        msg << "property index out of bounds - index " << index << " count " << atom->GetCount();
+        throw new EXCEPTION(msg.str());
+    }
+
+    auto property = atom->GetProperty(index);
+    *propertyName = property->GetName();
+    if (propertyType != nullptr) {
+        switch (property->GetType()) {
+            case Integer8Property:
+            case Integer16Property:
+            case Integer24Property:
+            case Integer32Property:
+            case Integer64Property:
+                strcpy(propertyType, "integer");
+                break;
+            case Float32Property:
+                strcpy(propertyType, "float");
+                break;
+            case Float64Property:
+                strcpy(propertyType, "double");
+                break;
+            case StringProperty:
+                strcpy(propertyType, "string");
+                break;
+            case BytesProperty:
+                strcpy(propertyType, "bytes");
+                break;
+            default:
+                strcpy(propertyType, "unknown");
+                break;
+        }
+    }
+    return true;
 }
 
 void MP4File::FindIntegerProperty(const char* name,
@@ -1556,12 +1685,12 @@ MP4TrackId MP4File::AddAC3AudioTrack(
     // Set Ac3 settings
     MP4Integer16Property* pSampleRateProperty = NULL;
     FindIntegerProperty(
-        MakeTrackName(trackId, "mdia.minf.stbl.stsd.ac-3.samplingRate"),
+        MakeTrackName(trackId, "mdia.minf.stbl.stsd.ac-3.timeScale"),
         (MP4Property**)&pSampleRateProperty);
     if (pSampleRateProperty) {
         pSampleRateProperty->SetValue(samplingRate);
     } else {
-        throw new EXCEPTION("no ac-3.samplingRate property");
+        throw new EXCEPTION("no ac-3.timeScale property");
     }
 
     MP4BitfieldProperty* pBitfieldProperty = NULL;
@@ -2645,6 +2774,10 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
             if (0 < counter)
             {
                 uint32_t timescale = pChapterTrack->GetTimeScale();
+                if (timescale == 0) {
+                    return MP4ChapterTypeNone;
+                }
+                
                 MP4Chapter_t * chapters = (MP4Chapter_t*)MP4Malloc(sizeof(MP4Chapter_t) * counter);
 
                 // process all chapter sample
@@ -2656,6 +2789,11 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
 
                     // get the starttime and duration
                     pChapterTrack->GetSampleTimes(sampleId, &startTime, &duration);
+                    if (startTime == MP4_INVALID_TIMESTAMP || duration == MP4_INVALID_DURATION) {
+                        MP4Free(sample);
+                        MP4Free(chapters);
+                        return MP4ChapterTypeNone;
+                    }
 
                     // we know that sample+2 contains the title (sample[0] and sample[1] is the length)
                     const char * title = (const char *)&(sample[2]);
@@ -2691,16 +2829,14 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
         MP4Integer32Property * pCounter = 0;
         if (!pChpl->FindProperty("chpl.chaptercount", (MP4Property **)&pCounter))
         {
-            log.warningf("%s: \"%s\": Nero chapter count does not exist",
-                         __FUNCTION__, GetFilename().c_str());
+            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chaptercount"), "Nero chapter count does not exist");
             return MP4ChapterTypeNone;
         }
 
         uint32_t counter = pCounter->GetValue();
         if (0 == counter)
         {
-            log.warningf("%s: \"%s\": No Nero chapters available",
-                         __FUNCTION__, GetFilename().c_str());
+            MP4File::AddParsingError(pChpl, INVALID_PROPERTY_VALUE_ERROR("moov.udta.chpl.chpl.chaptercount"), "Nero chapter count is zero", MP4_LOG_WARNING);
             return MP4ChapterTypeNone;
         }
 
@@ -2712,21 +2848,18 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
 
         if (!pChpl->FindProperty("chpl.chapters", (MP4Property **)&pTable))
         {
-            log.warningf("%s: \"%s\": Nero chapter list does not exist",
-                         __FUNCTION__, GetFilename().c_str());
+            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "Nero chapter list does not exist");
             return MP4ChapterTypeNone;
         }
 
         if (0 == (pStartTime = (MP4Integer64Property *) pTable->GetProperty(0)))
         {
-            log.warningf("%s: \"%s\": List of Chapter starttimes does not exist",
-                         __FUNCTION__, GetFilename().c_str());
+            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "List of Chapter starttimes does not exist");
             return MP4ChapterTypeNone;
         }
         if (0 == (pName = (MP4StringProperty *) pTable->GetProperty(1)))
         {
-            log.warningf("%s: \"%s\": List of Chapter titles does not exist",
-                         __FUNCTION__, GetFilename().c_str());
+            MP4File::AddParsingError(pChpl, MISSING_PROPERTY_ERROR("moov.udta.chpl.chpl.chapters"), "List of Chapter titles does not exist");
             return MP4ChapterTypeNone;
         }
 
@@ -2757,6 +2890,11 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
             else
             {
                 // last chapter
+                uint32_t timescale = GetTimeScale();
+                if (timescale == 0) {
+                    return MP4ChapterTypeNone;
+                }
+
                 duration = MP4ConvertTime(GetDuration(), GetTimeScale(), MP4_MILLISECONDS_TIME_SCALE) - chapterDurationSum;
             }
 
@@ -3104,6 +3242,11 @@ bool MP4File::GetSampleSync(MP4TrackId trackId, MP4SampleId sampleId)
     return m_pTracks[FindTrackIndex(trackId)]->IsSyncSample(sampleId);
 }
 
+std::string MP4File::GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId)
+{
+    return m_pTracks[FindTrackIndex(trackId)]->GetSampleFileURL(sampleId);
+}
+
 void MP4File::ReadSample(
     MP4TrackId    trackId,
     MP4SampleId   sampleId,
@@ -3209,6 +3352,48 @@ MP4Atom *MP4File::FindTrackAtom (MP4TrackId trackId, const char *name)
     return FindAtom(MakeTrackName(trackId, name));
 }
 
+bool MP4File::GetTrackAtomDetails(MP4TrackId trackId, const char* atomName,
+                                  const char** type, uint8_t* extendedType,
+                                  uint64_t* start, uint64_t* end, uint64_t* dataSize,
+                                  uint32_t* flags)
+{
+    return GetAtomDetails(MakeTrackName(trackId, atomName),
+                          type, extendedType,
+                          start, end, dataSize, flags);
+}
+
+bool MP4File::GetTrackChildCount(MP4TrackId trackId, const char* atomName, uint32_t* retVal)
+{
+    return GetChildCount(MakeTrackName(trackId, atomName), retVal);
+}
+
+bool MP4File::GetTrackChildDetails(MP4TrackId trackId, const char* atomName, uint32_t index,
+                                const char** type, uint8_t* extendedType,
+                                uint64_t* start, uint64_t* end, uint64_t* dataSize,
+                                uint32_t* flags)
+{
+        return GetChildDetails(MakeTrackName(trackId, atomName), index,
+                               type, extendedType,
+                               start, end, dataSize, flags);
+}
+
+bool MP4File::HaveTrackProperty (MP4TrackId trackId, const char *name)
+{
+    return HaveProperty(MakeTrackName(trackId, name));
+}
+
+bool MP4File::GetTrackPropertyCount (MP4TrackId trackId, const char* atomName, uint32_t* retVal)
+{
+    return GetPropertyCount(MakeTrackName(trackId, atomName), retVal);
+}
+
+bool MP4File::GetTrackPropertyDetails (MP4TrackId trackId,
+                                    const char* atomName, uint32_t index,
+                                    const char** propertyName, char* propertyType)
+{
+    return GetPropertyDetails(MakeTrackName(trackId, atomName), index, propertyName, propertyType);    
+}
+
 uint64_t MP4File::GetTrackIntegerProperty(MP4TrackId trackId, const char* name)
 {
     return GetIntegerProperty(MakeTrackName(trackId, name));
@@ -3229,6 +3414,11 @@ void MP4File::SetTrackFloatProperty(MP4TrackId trackId, const char* name,
                                     float value)
 {
     SetFloatProperty(MakeTrackName(trackId, name), value);
+}
+
+double MP4File::GetTrackDoubleProperty(MP4TrackId trackId, const char* name)
+{
+    return GetDoubleProperty(MakeTrackName(trackId, name));
 }
 
 void MP4File::SetTrackDoubleProperty(MP4TrackId trackId, const char* name,
@@ -3367,22 +3557,31 @@ bool MP4File::SetTrackName( MP4TrackId trackId, const char* name )
 
 MP4Duration MP4File::GetDuration()
 {
+    if (m_pDurationProperty == NULL) {
+        return MP4_INVALID_DURATION;
+    }
     return m_pDurationProperty->GetValue();
 }
 
 void MP4File::SetDuration(MP4Duration value)
 {
+    if (m_pDurationProperty == NULL) {
+        throw new EXCEPTION("missing duration property");
+    }
     m_pDurationProperty->SetValue(value);
 }
 
 uint32_t MP4File::GetTimeScale()
 {
+    if (m_pTimeScaleProperty == NULL) {
+        return 0;
+    }
     return m_pTimeScaleProperty->GetValue();
 }
 
 void MP4File::SetTimeScale(uint32_t value)
 {
-    if (value == 0) {
+    if (value == 0 || m_pTimeScaleProperty == NULL) {
         throw new EXCEPTION("invalid value");
     }
     m_pTimeScaleProperty->SetValue(value);
@@ -3528,9 +3727,8 @@ const char *MP4File::GetTrackMediaDataName (MP4TrackId trackId)
        return NULL;
 
     if (pAtom->GetNumberOfChildAtoms() != 1) {
-        log.errorf("%s: \"%s\": track %d has more than 1 child atoms in stsd", 
+        log.infof("%s: \"%s\": track %d has more than 1 child atoms in stsd", 
                    __FUNCTION__, GetFilename().c_str(), trackId);
-        return NULL;
     }
     pChild = pAtom->GetChildAtom(0);
     return pChild->GetType();
@@ -3563,6 +3761,9 @@ uint8_t MP4File::GetTrackEsdsObjectTypeId(MP4TrackId trackId)
                                        "mdia.minf.stbl.stsd.*.esds.decConfigDescr.objectTypeId");
     } catch (Exception *x) {
         delete x;
+        if (!HaveTrackProperty(trackId, "mdia.minf.stbl.stsd.*.*.esds.decConfigDescr.objectTypeId")) {
+            return 0;
+        }
         return GetTrackIntegerProperty(trackId,
                                        "mdia.minf.stbl.stsd.*.*.esds.decConfigDescr.objectTypeId");
     }

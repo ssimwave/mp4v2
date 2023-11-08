@@ -71,7 +71,7 @@ protected:
     }
 
     void ReadHeader(MP4File& file);
-    void ReadProperties(MP4File& file,
+    bool ReadProperties(MP4File& file,
                         uint32_t startIndex = 0, uint32_t count = 0xFFFFFFFF);
 
     virtual void Mutate() {

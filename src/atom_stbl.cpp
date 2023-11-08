@@ -31,7 +31,7 @@ MP4StblAtom::MP4StblAtom(MP4File &file)
     ExpectChildAtom("stsd", Required, OnlyOne);
     ExpectChildAtom("stts", Required, OnlyOne);
     ExpectChildAtom("ctts", Optional, OnlyOne);
-    ExpectChildAtom("stsz", Required, OnlyOne);
+    ExpectChildAtom("stsz", Optional, OnlyOne);
     ExpectChildAtom("stz2", Optional, OnlyOne);
     ExpectChildAtom("stsc", Required, OnlyOne);
     ExpectChildAtom("stco", Optional, OnlyOne);
@@ -40,6 +40,8 @@ MP4StblAtom::MP4StblAtom(MP4File &file)
     ExpectChildAtom("stsh", Optional, OnlyOne);
     ExpectChildAtom("stdp", Optional, OnlyOne);
     ExpectChildAtom("sdtp", Optional, OnlyOne);
+    ExpectChildAtom("sbgp", Optional, Many);
+    ExpectChildAtom("sbpd", Optional, Many);
 }
 
 void MP4StblAtom::Generate()

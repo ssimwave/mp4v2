@@ -65,7 +65,7 @@ extern "C" {
 const char* MP4GetFilename( MP4FileHandle hFile )
 {
     if (!MP4_IS_VALID_FILE_HANDLE(hFile))
-        return NULL;
+        return "";
     try
     {
         ASSERT(hFile);
@@ -82,7 +82,7 @@ const char* MP4GetFilename( MP4FileHandle hFile )
                                 "filename", __FUNCTION__ );
     }
 
-    return NULL;
+    return "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -637,6 +637,106 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         return false;
     }
 
+    bool MP4GetAtomDetails(MP4FileHandle hFile, const char* atomName, const char** type, uint8_t* extendedType,
+                        uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetAtomDetails(atomName, type, extendedType, start, end, dataSize, flags);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetChildCount(MP4FileHandle hFile, const char* atomName, uint32_t* retVal)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetChildCount(atomName, retVal);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;       
+    }
+
+    bool MP4GetChildDetails(MP4FileHandle hFile, const char* atomName, uint32_t index,
+                         const char** type, uint8_t* extendedType,
+                         uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetChildDetails(atomName, index, type, extendedType, start, end, dataSize, flags);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4HaveProperty(MP4FileHandle hFile, const char* name)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->HaveProperty(name);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetPropertyCount(MP4FileHandle hFile, const char* atomName, uint32_t* retVal)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetPropertyCount(atomName, retVal);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetPropertyDetails(MP4FileHandle hFile, const char* atomName, uint32_t index,
+                            const char** propertyName, char* propertyType)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetPropertyDetails(atomName, index, propertyName, propertyType);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
     bool MP4GetIntegerProperty(
         MP4FileHandle hFile, const char* propName, uint64_t *retvalue)
     {
@@ -662,6 +762,25 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
             try {
                 *retvalue = ((MP4File*)hFile)->GetFloatProperty(propName);
+                return true;
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetDoubleProperty(
+        MP4FileHandle hFile, const char* propName, double *retvalue)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                *retvalue = ((MP4File*)hFile)->GetDoubleProperty(propName);
                 return true;
             }
             catch( Exception* x ) {
@@ -1151,7 +1270,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     MP4TrackId MP4AddVideoTrack(
@@ -2316,7 +2435,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
     const char* MP4GetTrackMediaDataName(
         MP4FileHandle hFile, MP4TrackId trackId)
@@ -2333,7 +2452,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     bool MP4GetTrackMediaDataOriginalFormat(
@@ -2861,6 +2980,108 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         return false;
     }
 
+    bool MP4GetTrackAtomDetails(MP4FileHandle hFile, MP4TrackId trackId, const char* atomName,
+                         const char** type, uint8_t* extendedType,
+                         uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetTrackAtomDetails(trackId, atomName, type, extendedType, start, end, dataSize, flags);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetTrackChildCount(MP4FileHandle hFile, MP4TrackId trackId, const char* atomName, uint32_t* retVal)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File*)hFile)->GetTrackChildCount(trackId, atomName, retVal);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetTrackChildDetails(MP4FileHandle hFile, MP4TrackId trackId, const char* atomName, uint32_t index,
+                         const char** type, uint8_t* extendedType,
+                         uint64_t* start, uint64_t* end, uint64_t* dataSize, uint32_t* flags)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetTrackChildDetails(trackId, atomName, index, type, extendedType, start, end, dataSize, flags);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4HaveTrackProperty (MP4FileHandle hFile, MP4TrackId trackId, const char* name)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->HaveTrackProperty(trackId, name);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetTrackPropertyCount (MP4FileHandle hFile, MP4TrackId trackId, const char* atomName, uint32_t* retVal)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetTrackPropertyCount(trackId, atomName, retVal);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetTrackPropertyDetails (MP4FileHandle hFile, MP4TrackId trackId,
+                             const char* atomName, uint32_t index,
+                             const char** propertyName, char* propertyType)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetTrackPropertyDetails(trackId, atomName, index, propertyName, propertyType);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
     bool MP4GetTrackIntegerProperty (
         MP4FileHandle hFile, MP4TrackId trackId,
         const char* propName,
@@ -2891,6 +3112,27 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
             try {
                 *retvalue = ((MP4File*)hFile)->GetTrackFloatProperty(trackId, propName);
+                return true;
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    bool MP4GetTrackDoubleProperty(
+        MP4FileHandle hFile, MP4TrackId trackId,
+        const char* propName,
+        double *retvalue)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                *retvalue = ((MP4File*)hFile)->GetTrackDoubleProperty(trackId, propName);
                 return true;
             }
             catch( Exception* x ) {
@@ -3031,6 +3273,23 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
     }
 
     /* sample operations */
+
+    const char* MP4GetSampleFileURL(MP4FileHandle hFile, MP4TrackId trackId, MP4SampleId sampleId)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File*)hFile)->GetSampleFileURL(trackId, sampleId).c_str();
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return "";
+    }
 
     bool MP4ReadSample(
         /* input parameters */
@@ -3605,7 +3864,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     bool MP4SetSessionSdp(
@@ -3664,7 +3923,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
                 mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
             }
         }
-        return NULL;
+        return "";
     }
 
     bool MP4SetHintTrackSdp(

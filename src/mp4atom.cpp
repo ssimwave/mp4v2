@@ -80,6 +80,66 @@ MP4Atom* MP4Atom::CreateAtom( MP4File &file, MP4Atom* parent, const char* type )
     return atom;
 }
 
+//
+// Error log helper functions
+//
+MP4TrackId MP4Atom::GetTrackId(MP4Atom *atom) {
+    MP4TrackId trackId = MP4_INVALID_TRACK_ID;
+
+    const uint32_t id = ATOMID("trak");
+    while (atom != NULL) {
+        if( id == ATOMID(atom->GetType()) ) {
+            MP4Property* pProperty;
+
+            if (atom->FindProperty("trak.tkhd.trackId", &pProperty)) {
+                trackId = ((MP4Integer32Property*)pProperty)->GetValue();
+            }
+            break;
+        }
+
+        atom = atom->GetParentAtom();
+    }
+
+    return trackId;
+}
+
+std::string MP4Atom::ErrorLocation(MP4Atom *atom)
+{
+    std::string location = "Container";
+
+    const uint32_t id = ATOMID("trak");
+    while (atom != NULL) {
+        if( id == ATOMID(atom->GetType()) ) {
+            MP4Property* pProperty;
+
+            if (atom->FindProperty("trak.mdia.hdlr.handlerType", &pProperty)) {
+                std::string trackType = ((MP4StringProperty*)pProperty)->GetValue();
+                location = MP4Track::TrackTypeName(trackType);
+                if (location.compare("Unknown") == 0) {
+                    location = TRACK_ERROR;
+                }
+            }
+            break;
+        }
+
+        atom = atom->GetParentAtom();
+    }
+
+    return location;
+}
+
+void MP4Atom::LogAtomError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level) {
+    // Determine if atom belongs to a track, and retrieve track ID if available
+    MP4TrackId trackID = GetTrackId(atom);
+
+    if (trackID == MP4_INVALID_TRACK_ID) {
+        LOG_FORMATTED_MSG(level, category, ErrorLocation(atom), errorMsg.c_str());
+    }
+    else {
+        LOG_FORMATTED_TRACK_MSG(level, category, ErrorLocation(atom), trackID, errorMsg.c_str());
+    }
+}
+
 // generate a skeletal self
 
 void MP4Atom::Generate()
@@ -145,21 +205,24 @@ MP4Atom* MP4Atom::ReadAtom(MP4File& file, MP4Atom* pParentAtom)
 
     // Prevent integer underflow due to incorrect atom size read from file
     if ( dataSize < hdrSize ) {
-       ostringstream oss;
-       oss << "Invalid atom size in '" << type << "' atom, dataSize = " << dataSize << " cannot be less than hdrSize = " << static_cast<unsigned>( hdrSize );
-       log.errorf( "%s: \"%s\": %s", __FUNCTION__, file.GetFilename().c_str(), oss.str().c_str() );
-       throw new EXCEPTION(oss.str().c_str());
+        ostringstream oss;
+        oss << "Invalid atom size, dataSize = " << dataSize << " cannot be less than hdrSize = " << static_cast<unsigned>( hdrSize );
+        MP4File::AddParsingError(pParentAtom, MALFORMED_ATOM_ERROR(type), oss.str());
+
+        // Skip to end of the child atom as determined by header size and attempt to continue parsing ?
+        file.SetPosition(pos + hdrSize);
+        return NULL;
+        //throw new EXCEPTION(errorMsg.c_str());
     }
     dataSize -= hdrSize;
 
     log.verbose1f("\"%s\": type = \"%s\" data-size = %" PRIu64 " (0x%" PRIx64 ") hdr %u",
                   file.GetFilename().c_str(), type, dataSize, dataSize, hdrSize);
 
+    bool atomOverflow = false;
+    uint64_t overflowSize = dataSize;
     if (pos + hdrSize + dataSize > pParentAtom->GetEnd()) {
-        log.errorf("%s: \"%s\": invalid atom size, extends outside parent atom - skipping to end of \"%s\" \"%s\" %" PRIu64 " vs %" PRIu64,
-                   __FUNCTION__, file.GetFilename().c_str(), pParentAtom->GetType(), type,
-                   pos + hdrSize + dataSize,
-                   pParentAtom->GetEnd());
+        atomOverflow = true;
         log.verbose1f("\"%s\": parent %s (%" PRIu64 ") pos %" PRIu64 " hdr %d data %" PRIu64 " sum %" PRIu64,
                       file.GetFilename().c_str(), pParentAtom->GetType(),
                       pParentAtom->GetEnd(),
@@ -172,7 +235,10 @@ MP4Atom* MP4Atom::ReadAtom(MP4File& file, MP4Atom* pParentAtom)
         dataSize = pParentAtom->GetEnd() - pos - hdrSize;
     }
 
+    bool this_is_udta = ATOMID(pParentAtom->GetType()) == ATOMID("udta");
+
     MP4Atom* pAtom = CreateAtom(file, pParentAtom, type);
+
     //    pAtom->SetFile(pFile);
     pAtom->SetStart(pos);
     pAtom->SetEnd(pos + hdrSize + dataSize);
@@ -182,9 +248,13 @@ MP4Atom* MP4Atom::ReadAtom(MP4File& file, MP4Atom* pParentAtom)
         pAtom->SetExtendedType(extendedType);
     }
     if (pAtom->IsUnknownType()) {
-        if (!IsReasonableType(pAtom->GetType())) {
-            log.warningf("%s: \"%s\": atom type %s is suspect", __FUNCTION__, file.GetFilename().c_str(),
-                         pAtom->GetType());
+        if (pAtom->IsRootAtom() && pParentAtom != NULL) {
+            MP4File::AddParsingError(pAtom, SPECIFICATION_ERROR, "Invalid empty atom type, probable file corruption or parsing error");
+        }
+        else if (!IsReasonableType(pAtom->GetType()) && !this_is_udta) {
+            std::string errorMsg = std::string("Atom '") + pAtom->GetType() + "' in '" + pParentAtom->GetType() +
+                       "' is suspect, probable file corruption or parsing error";
+            MP4File::AddParsingError(pAtom, MALFORMED_ATOM_ERROR(type), errorMsg);
         } else {
             log.verbose1f("\"%s\": Info: atom type %s is unknown", file.GetFilename().c_str(),
                           pAtom->GetType());
@@ -198,13 +268,23 @@ MP4Atom* MP4Atom::ReadAtom(MP4File& file, MP4Atom* pParentAtom)
 
     pAtom->SetParentAtom(pParentAtom);
 
+    if (atomOverflow) {
+        ostringstream oss;
+        std::string parent = (pParentAtom->IsRootAtom()) ? "root" : pParentAtom->GetType();
+        oss << "Invalid atom size, atom extends outside parent atom '" << parent << "'. Expected = " << pParentAtom->GetEnd() - pos << ", Actual = " << hdrSize + overflowSize << ".";
+        MP4File::AddParsingError(pAtom, MALFORMED_ATOM_ERROR(type), oss.str());
+
+        pAtom->Skip();
+        return pAtom;
+    }
+
     try {
         pAtom->Read();
     }
     catch (Exception*) {
-        // delete atom and rethrow so we don't leak memory.
+        // delete atom and return NULL
         delete pAtom;
-        throw;
+        pAtom = NULL;
     }
 
     return pAtom;
@@ -373,7 +453,7 @@ bool MP4Atom::FindContainedProperty(const char *name,
     return false;
 }
 
-void MP4Atom::ReadProperties(uint32_t startIndex, uint32_t count)
+bool MP4Atom::ReadProperties(uint32_t startIndex, uint32_t count)
 {
     uint32_t numProperties = min(count, m_pProperties.Size() - startIndex);
 
@@ -388,8 +468,18 @@ void MP4Atom::ReadProperties(uint32_t startIndex, uint32_t count)
                           m_File.GetPosition(), m_end);
 
             ostringstream oss;
-            oss << "atom '" << GetType() << "' is too small; overrun at property: " << m_pProperties[i]->GetName();
-            throw new EXCEPTION(oss.str().c_str());
+            oss << "Invalid atom size, overrun at property '" << m_pProperties[i]->GetName() << "'";
+            MP4File::AddParsingError(this, MALFORMED_ATOM_ERROR(GetType()), oss.str());
+
+            // Delete this property and any subsequent properties
+            // Reset the file position to the end of the atom, and continue parsing
+            for (uint32_t j = m_pProperties.Size() - 1; j >= i; j--) {
+                m_pProperties.Delete(j);
+            }
+            m_File.SetPosition(m_end);
+
+            //throw new EXCEPTION(errorMsg.c_str());
+            return false;
         }
 
         MP4LogLevel thisVerbosity =
@@ -401,6 +491,8 @@ void MP4Atom::ReadProperties(uint32_t startIndex, uint32_t count)
             m_pProperties[i]->Dump(0, true);
         }
     }
+
+    return true;
 }
 
 void MP4Atom::ReadChildAtoms()
@@ -414,57 +506,68 @@ void MP4Atom::ReadChildAtoms()
         // make sure that we have enough to read at least 8 bytes
         // size and type.
         if (m_end - position < 2 * sizeof(uint32_t)) {
+            ostringstream oss;
             // if we're reading udta, it's okay to have 4 bytes of 0
             if (this_is_udta &&
                     m_end - position == sizeof(uint32_t)) {
                 uint32_t mbz = m_File.ReadUInt32();
                 if (mbz != 0) {
-                    log.warningf("%s: \"%s\": In udta atom, end value is not zero %x", __FUNCTION__, 
-                                 m_File.GetFilename().c_str(), mbz);
+                    oss << "In udta atom, end value is not zero " << std::hex << mbz;
+                    MP4File::AddParsingError(this, MALFORMED_ATOM_ERROR(GetType()), oss.str(), MP4_LOG_WARNING);
                 }
                 continue;
             }
             // otherwise, output a warning, but don't care
-            log.warningf("%s: \"%s\": In %s atom, extra %" PRId64 " bytes at end of atom", __FUNCTION__, 
-                         m_File.GetFilename().c_str(), m_type, (m_end - position));
+            oss << "Extra " << std::to_string(m_end - position) << " bytes at end of atom";
+            MP4File::AddParsingError(this, MALFORMED_ATOM_ERROR(GetType()), oss.str(), MP4_LOG_WARNING);
             for (uint64_t ix = 0; ix < m_end - position; ix++) {
                 (void)m_File.ReadUInt8();
             }
             continue;
         }
+
         MP4Atom* pChildAtom = MP4Atom::ReadAtom(m_File, this);
+        if (pChildAtom == NULL) {
+            continue;
+        }
 
         AddChildAtom(pChildAtom);
 
         MP4AtomInfo* pChildAtomInfo = FindAtomInfo(pChildAtom->GetType());
 
-        // if child atom is of known type
-        // but not expected here print warning
-        if (pChildAtomInfo == NULL && !pChildAtom->IsUnknownType()) {
-            log.verbose1f("%s: \"%s\": In atom %s unexpected child atom %s", __FUNCTION__,
-                          m_File.GetFilename().c_str(), GetType(), pChildAtom->GetType());
+        // If it's root atom, and child atom is unexpected, log an error,
+        // otherwise if child atom is of known type
+        // but not expected here log warning
+        if (pChildAtomInfo == NULL && IsRootAtom()) {
+            std::string errorMsg = std::string("Unexpected root level atom '") + pChildAtom->GetType() + "'";
+            MP4File::AddParsingError(this, SPECIFICATION_ERROR, errorMsg);
+        }
+        else if (pChildAtomInfo == NULL && !this_is_udta) {
+            std::string errorMsg = std::string("Unexpected child atom '") + pChildAtom->GetType() + "' in '" + GetType() + "'";
+            MP4File::AddParsingError(this, SPECIFICATION_ERROR, errorMsg, MP4_LOG_WARNING);
         }
 
         // if child atoms should have just one instance
-        // and this is more than one, print warning
+        // and this is more than one, log an error
         if (pChildAtomInfo) {
             pChildAtomInfo->m_count++;
 
             if (pChildAtomInfo->m_onlyOne && pChildAtomInfo->m_count > 1) {
-                log.warningf("%s: \"%s\": In atom %s multiple child atoms %s", __FUNCTION__,
-                             m_File.GetFilename().c_str(), GetType(), pChildAtom->GetType());
+                std::string errorMsg = std::string("Multiple instances of atom '") + pChildAtom->GetType() + "' found in parent atom '" + GetType() + "'";
+                MP4File::AddParsingError(this, SPECIFICATION_ERROR, errorMsg);
             }
         }
-
     }
 
-    // if mandatory child atom doesn't exist, print warning
+    // if mandatory child atom doesn't exist, log an error
     uint32_t numAtomInfo = m_pChildAtomInfos.Size();
     for (uint32_t i = 0; i < numAtomInfo; i++) {
         if (m_pChildAtomInfos[i]->m_mandatory
                 && m_pChildAtomInfos[i]->m_count == 0) {
-            log.warningf("%s: \"%s\": In atom %s missing child atom %s", __FUNCTION__,
-                         m_File.GetFilename().c_str(), GetType(), m_pChildAtomInfos[i]->m_name);
+
+            std::string parent = (IsRootAtom()) ? "root" : GetType();
+            std::string errorMsg = std::string("Atom '") + parent + "' missing mandatory child atom '" + m_pChildAtomInfos[i]->m_name + "'";
+            MP4File::AddParsingError(this, SPECIFICATION_ERROR, errorMsg);
         }
     }
 
@@ -858,9 +961,13 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
                 return new MP4TrefTypeAtom( file, type );
             if( ATOMID(type) == ATOMID("dac3") )
                 return new MP4DAc3Atom(file);
+            if( ATOMID(type) == ATOMID("dec3") )
+                return new MP4DEc3Atom(file);
             break;
 
         case 'e':
+            if( ATOMID(type) == ATOMID("ec-3") )
+                return new MP4Eac3Atom(file);
             if( ATOMID(type) == ATOMID("elst") )
                 return new MP4ElstAtom(file);
             if( ATOMID(type) == ATOMID("enca") )

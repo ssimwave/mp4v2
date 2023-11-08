@@ -82,7 +82,11 @@ MP4OhdrAtom::~MP4OhdrAtom() {
 /*! \brief Read atom.
 */
 void MP4OhdrAtom::Read() {
-    ReadProperties(0, 8);
+    bool success = ReadProperties(0, 8);
+    if (!success) {
+        return;
+    }
+
     MP4Property* lProperty;
     MP4Property* property;
     lProperty = GetProperty(5);

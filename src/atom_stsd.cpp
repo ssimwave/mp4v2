@@ -62,26 +62,14 @@ MP4StsdAtom::MP4StsdAtom(MP4File &file)
     ExpectChildAtom("text", Optional, Many);
     ExpectChildAtom("tx3g", Optional, Many);
     ExpectChildAtom("ac-3", Optional, Many);
+    ExpectChildAtom("ec-3", Optional, Many);
+    ExpectChildAtom("tmcd", Optional, Many);
 }
 
 void MP4StsdAtom::Read()
 {
     /* do the usual read */
     MP4Atom::Read();
-
-    // check that number of children == entryCount
-    MP4Integer32Property* pCount =
-        (MP4Integer32Property*)m_pProperties[2];
-
-    if (m_pChildAtoms.Size() != pCount->GetValue()) {
-        log.warningf("%s: \"%s\": stsd inconsistency with number of entries",
-                     __FUNCTION__, GetFile().GetFilename().c_str() );
-
-        /* fix it */
-        pCount->SetReadOnly(false);
-        pCount->SetValue(m_pChildAtoms.Size());
-        pCount->SetReadOnly(true);
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

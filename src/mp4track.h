@@ -67,6 +67,9 @@ public:
 
     void SetType(const char* type);
 
+    std::string TrackTypeName();
+    static std::string TrackTypeName(const std::string& trackType);
+
     MP4File& GetFile() {
         return m_File;
     }
@@ -74,6 +77,8 @@ public:
     MP4Atom& GetTrakAtom() {
         return m_trakAtom;
     }
+
+    std::string GetSampleFileURL(MP4SampleId sampleId);
 
     void ReadSample(
         // input parameters
@@ -212,8 +217,9 @@ protected:
     MP4TrackId  m_trackId;          // moov.trak[].tkhd.trackId
     MP4StringProperty* m_pTypeProperty; // moov.trak[].mdia.hdlr.handlerType
 
-    uint32_t m_lastStsdIndex;
-    File*    m_lastSampleFile;
+    uint32_t    m_lastStsdIndex;
+    File*       m_lastSampleFile;
+    std::string m_lastSampleFileURL;
 
     // for efficient construction of hint track packets
     MP4SampleId m_cachedReadSampleId;
@@ -266,6 +272,8 @@ protected:
     MP4Integer32Property* m_pSttsCountProperty;
     MP4Integer32Property* m_pSttsSampleCountProperty;
     MP4Integer32Property* m_pSttsSampleDeltaProperty;
+
+    bool m_hasSampleTables;
 
     // for improve sequental timestamp index access
     uint32_t    m_cachedSttsIndex;

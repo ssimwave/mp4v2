@@ -72,13 +72,14 @@ void MP4TrunAtom::AddProperties(uint32_t flags)
 void MP4TrunAtom::Read()
 {
     /* read atom version, flags, and sampleCount */
-    ReadProperties(0, 3);
+    bool success = ReadProperties(0, 3);
+    if (success) {
+        /* need to create the properties based on the atom flags */
+        AddProperties(GetFlags());
 
-    /* need to create the properties based on the atom flags */
-    AddProperties(GetFlags());
-
-    /* now we can read the remaining properties */
-    ReadProperties(3);
+        /* now we can read the remaining properties */
+        ReadProperties(3);
+    }
 
     Skip(); // to end of atom
 }

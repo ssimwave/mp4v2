@@ -105,6 +105,17 @@ public:
     void Check64BitStatus(const char *atomName);
     /* file properties */
 
+    bool GetChildCount(const char* atomName, uint32_t* retVal);
+    bool GetChildDetails(const char* atomName, uint32_t index,
+                      const char** type, uint8_t* extendedType = NULL,
+                      uint64_t* start = NULL, uint64_t* end = NULL,
+                      uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
+    bool HaveProperty(const char* name);
+    bool GetPropertyCount(const char* atomName, uint32_t* retVal);
+    bool GetPropertyDetails(const char* atomName, uint32_t index,
+                         const char** propertyName, char* propertyType = NULL);
+
     uint64_t GetIntegerProperty(const char* name);
     float GetFloatProperty(const char* name);
     double GetDoubleProperty(const char* name);
@@ -161,6 +172,23 @@ public:
 
     /* track properties */
     MP4Atom *FindTrackAtom(MP4TrackId trackId, const char *name);
+    bool GetTrackAtomDetails(MP4TrackId trackId, const char* atomName,
+                          const char** type, uint8_t* extendedType = NULL,
+                          uint64_t* start = NULL, uint64_t* end = NULL,
+                          uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
+    bool GetTrackChildCount(MP4TrackId trackId, const char* atomName, uint32_t* retVal);
+    bool GetTrackChildDetails(MP4TrackId trackId, const char* atomName, uint32_t index,
+                           const char** type, uint8_t* extendedType = NULL,
+                           uint64_t* start = NULL, uint64_t* end = NULL,
+                           uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
+    bool HaveTrackProperty (MP4TrackId trackId, const char* name);
+    bool GetTrackPropertyCount(MP4TrackId trackId, const char* atomName, uint32_t* retVal);
+    bool GetTrackPropertyDetails(MP4TrackId trackId,
+                              const char* atomName, uint32_t index,
+                              const char** propertyName, char* propertyType = NULL);
+
     uint64_t GetTrackIntegerProperty(
         MP4TrackId trackId, const char* name);
     float GetTrackFloatProperty(
@@ -210,6 +238,8 @@ public:
 
     bool GetSampleSync(
         MP4TrackId trackId, MP4SampleId sampleId);
+
+    std::string GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId);
 
     void ReadSample(
         // input parameters
@@ -843,6 +873,11 @@ public:
 
     MP4Atom* FindAtom(const char* name);
 
+    bool GetAtomDetails(const char* atomName,
+                     const char** type, uint8_t* extendedType = NULL,
+                     uint64_t* start = NULL, uint64_t* end = NULL,
+                     uint64_t* dataSize = NULL, uint32_t* flags = NULL);
+
     MP4Atom* AddChildAtom(
         const char* parentName,
         const char* childName);
@@ -868,6 +903,8 @@ public:
     MP4Atom* AddDescendantAtoms(
         MP4Atom* pAncestorAtom,
         const char* childName);
+
+    static void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
 
 protected:
     void Init();
@@ -979,6 +1016,8 @@ protected:
         uint8_t** ppBytes,
         uint64_t* pNumBytes);
 
+    void LogParsingErrors();
+
 protected:
     File*    m_file;
     uint64_t m_fileOriginalSize;
@@ -1008,6 +1047,14 @@ protected:
 
     char m_trakName[1024];
     char m_editName[1024];
+
+    typedef struct ParsingError_s {
+        MP4Atom *atom;
+        std::string category;
+        std::string errorMsg;
+        MP4LogLevel level;
+    } ParsingError;
+    static std::list<ParsingError> m_parsingErrors;
 
  private:
     MP4File ( const MP4File &src );
