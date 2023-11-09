@@ -62,8 +62,6 @@ MP4Atom::~MP4Atom()
 {
     uint32_t i;
 
-    LogAtomError("Read", "Destroying atom", MP4_LOG_INFO);
-
     for (i = 0; i < m_pProperties.Size(); i++) {
         delete m_pProperties[i];
     }
@@ -89,12 +87,9 @@ MP4TrackId MP4Atom::GetTrackId() {
     MP4TrackId trackId = MP4_INVALID_TRACK_ID;
     MP4Atom *atom = this;
 
-    uint32_t id = ATOMID("trak");
+    const uint32_t id = ATOMID("trak");
     while (atom != NULL) {
-/*
-        const char *testType = atom->GetType();
-        uint32_t testID = ATOMID(testType);
-        if(id == testID) {
+        if(id == ATOMID(atom->GetType())) {
             MP4Property* pProperty;
 
             if (atom->FindProperty("trak.tkhd.trackId", &pProperty)) {
@@ -102,12 +97,9 @@ MP4TrackId MP4Atom::GetTrackId() {
             }
             break;
         }
-*/
 
         atom = atom->GetParentAtom();
     }
-
-    (void)id;
 
     return trackId;
 }
@@ -115,15 +107,11 @@ MP4TrackId MP4Atom::GetTrackId() {
 std::string MP4Atom::ErrorLocation()
 {
     std::string location = "Container";
-
-/*
     MP4Atom *atom = this;
 
     uint32_t id = ATOMID("trak");
     while (atom != NULL) {
-        const char *testType = atom->GetType();
-        uint32_t testID = ATOMID(testType);
-        if(id == testID) {
+        if(id == ATOMID(atom->GetType())) {
             MP4Property* pProperty;
 
             if (atom->FindProperty("trak.mdia.hdlr.handlerType", &pProperty)) {
@@ -138,7 +126,6 @@ std::string MP4Atom::ErrorLocation()
 
         atom = atom->GetParentAtom();
     }
-*/
 
     return location;
 }
@@ -298,7 +285,6 @@ MP4Atom* MP4Atom::ReadAtom(MP4File& file, MP4Atom* pParentAtom)
     }
     catch (Exception*) {
         // delete atom and return NULL
-        pAtom->LogAtomError("Read", "Exception caught while reading atom!", MP4_LOG_ERROR);
         delete pAtom;
         pAtom = NULL;
     }
