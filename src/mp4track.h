@@ -174,6 +174,9 @@ public:
     MP4Duration GetDurationPerChunk();
     void        SetDurationPerChunk( MP4Duration );
 
+    mp4v2::impl::Log& Logger();
+    const mp4v2::impl::Log& Logger() const;
+
 protected:
     bool        InitEditListProperties();
 

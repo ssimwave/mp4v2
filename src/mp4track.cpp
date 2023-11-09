@@ -2296,6 +2296,16 @@ void MP4Track::SetDurationPerChunk( MP4Duration duration )
     m_durationPerChunk = duration;
 }
 
+mp4v2::impl::Log& MP4Track::Logger()
+{
+    return m_File.Logger();
+}
+
+const mp4v2::impl::Log& MP4Track::Logger() const
+{
+    return m_File.Logger();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 }} // namespace mp4v2::impl

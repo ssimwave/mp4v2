@@ -233,6 +233,9 @@ public:
     std::string ErrorLocation();
     void LogAtomError(const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
 
+    mp4v2::impl::Log& Logger() { return m_File.Logger(); }
+    const mp4v2::impl::Log& Logger() const { return m_File.Logger(); }
+
 protected:
     void AddProperty(MP4Property* pProperty);
 

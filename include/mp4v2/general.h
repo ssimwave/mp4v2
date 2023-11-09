@@ -976,8 +976,7 @@ void MP4Free(
  *  @see MP4LogCallback
  */
 MP4V2_EXPORT
-void MP4SetLogCallback(
-    MP4LogCallback cb_func, void* handle );
+void MP4SetLogCallback(MP4LogCallback cb_func, void* handle, MP4FileHandle hFile = MP4_INVALID_FILE_HANDLE );
 
 /** Get the current maximum log level.
  *
@@ -989,7 +988,7 @@ void MP4SetLogCallback(
  *  @see MP4LogSetLevel()
  */
 MP4V2_EXPORT
-MP4LogLevel MP4LogGetLevel( void );
+MP4LogLevel MP4LogGetLevel(MP4FileHandle hFile);
 
 /** Set the maximum log level.
  *
@@ -1001,8 +1000,7 @@ MP4LogLevel MP4LogGetLevel( void );
  *  @see MP4LogGetLevel()
  */
 MP4V2_EXPORT
-void MP4LogSetLevel(
-    MP4LogLevel verbosity );
+void MP4LogSetLevel(MP4LogLevel verbosity, MP4FileHandle hFile = MP4_INVALID_FILE_HANDLE);
 
 /** @} ***********************************************************************/
 

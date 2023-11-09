@@ -27,9 +27,6 @@
 
 namespace mp4v2 { namespace impl {
 
-MP4LogCallback Log::_cb_func = NULL;
-void*          Log::_handle = NULL;
-
 // There's no mechanism to set the log level at runtime at
 // the moment so construct this so it only logs important
 // stuff.
@@ -42,6 +39,8 @@ Log log(MP4_LOG_WARNING);
  */
 Log::Log( MP4LogLevel verbosity_ /* = MP4_LOG_NONE */ )
     : _verbosity ( verbosity_ )
+    , _cb_func(NULL)
+    , _handle(NULL)
     , verbosity  ( _verbosity )
 {
 }
@@ -67,10 +66,10 @@ Log::~Log()
  *      containing a pointer to a buffer.
  */
 void
-Log::setLogCallback( MP4LogCallback value, void* handle )
+Log::setLogCallback( MP4LogCallback callback, void* handle )
 {
-    Log::_cb_func = value;
-    Log::_handle = handle;
+    _cb_func = callback;
+    _handle = handle;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -284,7 +283,7 @@ Log::vdump( uint8_t     indent,
         return;
     }
 
-    if (Log::_cb_func)
+    if (_cb_func)
     {
         ostringstream   new_format;
 
@@ -294,11 +293,11 @@ Log::vdump( uint8_t     indent,
             // new_format << setw(indent) << setfill(' ') << "" << setw(0);
             // new_format << format;
             new_format << indent_str << format;
-            Log::_cb_func(Log::_handle, verbosity_,new_format.str().c_str(),ap);
+            _cb_func(_handle, verbosity_,new_format.str().c_str(),ap);
             return;
         }
 
-        Log::_cb_func(Log::_handle, verbosity_,format,ap);
+        _cb_func(_handle, verbosity_,format,ap);
         return;
     }
 
@@ -365,9 +364,9 @@ Log::vprintf( MP4LogLevel       verbosity_,
         return;
     }
 
-    if (Log::_cb_func)
+    if (_cb_func)
     {
-        Log::_cb_func(Log::_handle, verbosity_,format,ap);
+        _cb_func(_handle, verbosity_,format,ap);
         return;
     }
 
@@ -580,30 +579,43 @@ std::string std::to_string(MP4LogLevel level) {
 }
 
 extern "C"
-void MP4SetLogCallback( MP4LogCallback cb_func, void* handle )
+void MP4SetLogCallback(MP4LogCallback cb_func, void* handle, MP4FileHandle hFile)
 {
-    Log::setLogCallback(cb_func, handle);
+    if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+        ((MP4File*)hFile)->SetLogCallback(cb_func, handle);
+    }
+    else {
+        mp4v2::impl::log.setLogCallback(cb_func, handle);
+    }
 }
 
 extern "C"
-MP4LogLevel MP4LogGetLevel(void)
+MP4LogLevel MP4LogGetLevel(MP4FileHandle hFile)
 {
-    return mp4v2::impl::log.verbosity;
+    if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+        return ((MP4File*)hFile)->Logger().verbosity;
+    }
+    else {
+        return mp4v2::impl::log.verbosity;
+    }
 }
 
 extern "C"
-void MP4LogSetLevel( MP4LogLevel verbosity )
+void MP4LogSetLevel(MP4LogLevel verbosity, MP4FileHandle hFile)
 {
     try
     {
-        mp4v2::impl::log.setVerbosity(verbosity);
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            ((MP4File*)hFile)->Logger().setVerbosity(verbosity);
+        }
+        else {
+            mp4v2::impl::log.setVerbosity(verbosity);
+        }
     }
     catch( Exception* x ) {
-        mp4v2::impl::log.errorf(*x);
         delete x;
     }
     catch( ... ) {
-        mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
     }
 }
 
