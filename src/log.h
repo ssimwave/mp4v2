@@ -80,9 +80,9 @@ public:
 
     void errorf ( const Exception&      x );
 
-    std::string formatMsg(const std::string& format, va_list args);
-    std::string formatMsg(const std::string& category, const std::string& location, const std::string& format, ...);
-    std::string formatTrackMsg(const std::string& category, const std::string& location, MP4TrackId trackID, const std::string& format, ...);
+    std::string formatMsg(const char* format, va_list args);
+    std::string formatMsg(const std::string& category, const std::string& location, const char* format, ...);
+    std::string formatTrackMsg(const std::string& category, const std::string& location, MP4TrackId trackID, const char* format, ...);
 
 private:
     Log ( const Log &src );

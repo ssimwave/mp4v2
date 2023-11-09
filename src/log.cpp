@@ -503,32 +503,32 @@ Log::errorf ( const Exception&      x )
     this->printf(MP4_LOG_ERROR,"%s",x.msg().c_str());
 }
 
-std::string Log::formatMsg(const std::string& format, va_list args) {
+std::string Log::formatMsg(const char* format, va_list args) {
     std::string ret;
 
     // Calculate the length of the formatted string
     va_list args_copy;
     va_copy(args_copy, args);
-    int length = vsnprintf(nullptr, 0, format.c_str(), args_copy);
+    int length = vsnprintf(nullptr, 0, format, args_copy);
     va_end(args_copy);
 
     if (length <= 0) {
         return ret;
     }
-    else if (length == (int)format.size()) {
+    else if (length == (int)strlen(format)) {
         return format;
     }
 
     // Format the message
     char *msg = new char[length+1];
-    vsnprintf(msg, length+1, format.c_str(), args);
+    vsnprintf(msg, length+1, format, args);
 
     ret = msg;
     delete [] msg;
     return ret;
 }
 
-std::string Log::formatMsg(const std::string& category, const std::string& location, const std::string& format, ...) {
+std::string Log::formatMsg(const std::string& category, const std::string& location, const char* format, ...) {
     va_list args;
     va_start(args, format);
 
@@ -538,7 +538,7 @@ std::string Log::formatMsg(const std::string& category, const std::string& locat
     return ret;
 }
 
-std::string Log::formatTrackMsg(const std::string& category, const std::string& location, MP4TrackId trackID, const std::string& format, ...) {
+std::string Log::formatTrackMsg(const std::string& category, const std::string& location, MP4TrackId trackID, const char* format, ...) {
     va_list args;
     va_start(args, format);
 
@@ -582,7 +582,7 @@ extern "C"
 void MP4SetLogCallback(MP4LogCallback cb_func, void* handle, MP4FileHandle hFile)
 {
     if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
-        ((MP4File*)hFile)->SetLogCallback(cb_func, handle);
+        ((MP4File*)hFile)->Logger().setLogCallback(cb_func, handle);
     }
     else {
         mp4v2::impl::log.setLogCallback(cb_func, handle);

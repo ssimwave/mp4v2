@@ -127,7 +127,8 @@ MP4FileHandle MP4ReadCallbacks( const MP4IOCallbacks* callbacks, void* handle )
     if (!pFile)
         return MP4_INVALID_FILE_HANDLE;
 
-    pFile->SetLogCallback(callbacks->log_callback, handle);
+    pFile->Logger().setLogCallback(callbacks->log_callback, handle);
+    pFile->Logger().setVerbosity(callbacks->log_level);
 
     try {
         pFile->Read( NULL, NULL, callbacks, handle );

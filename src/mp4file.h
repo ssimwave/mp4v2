@@ -906,7 +906,6 @@ public:
 
     mp4v2::impl::Log& Logger() { return m_log; }
     const mp4v2::impl::Log& Logger() const { return m_log; }
-    void SetLogCallback(MP4LogCallback log_callback, void* handle);
     void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
 
 protected:

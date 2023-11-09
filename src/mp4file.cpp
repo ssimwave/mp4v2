@@ -552,10 +552,6 @@ void MP4File::CacheProperties()
                         (MP4Property**)&m_pDurationProperty);
 }
 
-void MP4File::SetLogCallback(MP4LogCallback log_callback, void* handle) {
-    Logger().setLogCallback(log_callback, handle);
-}
-
 void MP4File::AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level)
 {
     ParsingError error;
