@@ -239,7 +239,7 @@ public:
     bool GetSampleSync(
         MP4TrackId trackId, MP4SampleId sampleId);
 
-    std::string GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId);
+    const char* GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId);
 
     void ReadSample(
         // input parameters

@@ -1052,7 +1052,7 @@ uint32_t MP4Track::GetSampleStscIndex(MP4SampleId sampleId)
     return stscIndex;
 }
 
-std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
+const char* MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 {
     if (!m_hasSampleTables) {
         return "Error";
@@ -1067,7 +1067,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 
     // check if the answer will be the same as last time
     if( m_lastStsdIndex && stsdIndex == m_lastStsdIndex )
-        return m_lastSampleFileURL;
+        return m_lastSampleFileURL.c_str();
 
     MP4Atom* pStsdAtom = m_trakAtom.FindAtom( "trak.mdia.minf.stbl.stsd" );
     if (pStsdAtom == NULL) {
@@ -1094,14 +1094,14 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
         if ( pFtypAtom == NULL ) {
             m_lastStsdIndex = stsdIndex;
             m_lastSampleFileURL = "";
-            return m_lastSampleFileURL;
+            return m_lastSampleFileURL.c_str();
         }
 
         // ... but most often it is present with a "qt  " value
         if ( strequal( pFtypAtom->majorBrand.GetValue(), "qt  " ) ) {
             m_lastStsdIndex = stsdIndex;
             m_lastSampleFileURL = "";
-            return m_lastSampleFileURL;
+            return m_lastSampleFileURL.c_str();
         }
 
         //MP4Atom::LogAtomError(&m_trakAtom, MISSING_PROPERTY_ERROR("stsd.*.dataReferenceIndex"), std::string());
@@ -1145,7 +1145,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 
     m_lastStsdIndex = stsdIndex;
     m_lastSampleFileURL = url;
-    return url;
+    return m_lastSampleFileURL.c_str();
 }
 
 File* MP4Track::GetSampleFile( MP4SampleId sampleId )
@@ -1167,15 +1167,15 @@ File* MP4Track::GetSampleFile( MP4SampleId sampleId )
     if( m_lastStsdIndex && stsdIndex == m_lastStsdIndex )
         return m_lastSampleFile;
 
-    std::string url = GetSampleFileURL( sampleId );
-    if (url.empty()) {
+    const char* url = GetSampleFileURL( sampleId );
+    if (!strlen(url)) {
         file = NULL; // self-contained
     }
-    else if (url.compare("Error") != 0) {
+    else if (!strequal(url,"Error")) {
         // attempt to open url if it's a file url
         // currently this is the only thing we understand
-        if( strnequal( url.c_str(), "file:", 5 )) {
-            const char* fileName = url.c_str() + 5;
+        if( strequal(url, "file:")) {
+            const char* fileName = url + 5;
 
             if( strnequal(fileName, "//", 2 ))
                 fileName = strchr( fileName + 2, '/' );

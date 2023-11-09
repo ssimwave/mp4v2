@@ -3281,7 +3281,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
     {
         if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
             try {
-                return ((MP4File*)hFile)->GetSampleFileURL(trackId, sampleId).c_str();
+                return ((MP4File*)hFile)->GetSampleFileURL(trackId, sampleId);
             }
             catch( Exception* x ) {
                 mp4v2::impl::log.errorf(*x);

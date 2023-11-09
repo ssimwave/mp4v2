@@ -3242,7 +3242,7 @@ bool MP4File::GetSampleSync(MP4TrackId trackId, MP4SampleId sampleId)
     return m_pTracks[FindTrackIndex(trackId)]->IsSyncSample(sampleId);
 }
 
-std::string MP4File::GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId)
+const char* MP4File::GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId)
 {
     return m_pTracks[FindTrackIndex(trackId)]->GetSampleFileURL(sampleId);
 }
