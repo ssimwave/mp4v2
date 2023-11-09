@@ -972,24 +972,27 @@ void MP4Free(
  *      any log function call. This can be used to pass a handle to an
  *      application specific I/O object or an application defined struct
  *      containing a pointer to a buffer.
+ *  @param hFile specifies the mp4 file to which the operation applies, otherwise
+ *      applies to the global logger.
  *
  *  @see MP4LogCallback
  */
 MP4V2_EXPORT
-void MP4SetLogCallback(
-    MP4LogCallback cb_func, void* handle );
+void MP4SetLogCallback(MP4LogCallback cb_func, void* handle, MP4FileHandle hFile = MP4_INVALID_FILE_HANDLE );
 
 /** Get the current maximum log level.
  *
  *  MP4LogGetLevel returns the currently set maximum level of diagnostic
  *  information passed to the log handler.
  *
+ *  @param hFile specifies the mp4 file to which the operation applies, otherwise
+ *      applies to the global logger.
  *  @return the current maximum level of diagnostic information.
  *
  *  @see MP4LogSetLevel()
  */
 MP4V2_EXPORT
-MP4LogLevel MP4LogGetLevel( void );
+MP4LogLevel MP4LogGetLevel(MP4FileHandle hFile);
 
 /** Set the maximum log level.
  *
@@ -997,12 +1000,13 @@ MP4LogLevel MP4LogGetLevel( void );
  *  the current log handler.
  *
  *  @param verbosity specifies the log level to set.
+ *  @param hFile specifies the mp4 file to which the operation applies, otherwise
+ *      applies to the global logger.
  *
  *  @see MP4LogGetLevel()
  */
 MP4V2_EXPORT
-void MP4LogSetLevel(
-    MP4LogLevel verbosity );
+void MP4LogSetLevel(MP4LogLevel verbosity, MP4FileHandle hFile = MP4_INVALID_FILE_HANDLE);
 
 /** @} ***********************************************************************/
 

@@ -154,8 +154,9 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
             // Validate stz2.fieldSize
             if (m_stsz_sample_bits != 4 && m_stsz_sample_bits != 8 && m_stsz_sample_bits != 16) {
                 std::string errorMsg = std::string("invalid field size. Expected = 4, 8, or 16, Actual =  ") +
-                                                   std::to_string(m_stsz_sample_bits);
-                MP4File::AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stz2.fieldSize"), errorMsg);
+                                       std::to_string(m_stsz_sample_bits);
+
+                file.AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stz2.fieldSize"), errorMsg);
             }
 
             m_have_stz2_4bit_sample = (m_stsz_sample_bits == 4);
@@ -289,7 +290,7 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
             std::string errormsg = std::string("Inconsistency in number of entries. Expected = ") +
                                    std::to_string(stsd->GetNumberOfChildAtoms()) +
                                    std::string(" Actual = ") + std::to_string(stsdCount);
-            MP4File::AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stsd.entryCount"), errormsg);
+            file.AddParsingError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stsd.entryCount"), errormsg);
 
             /* fix it */
             stsdProperty->SetReadOnly(false);
@@ -298,13 +299,13 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
         }
 
         if (stsdProperty->GetValue() == 0) {
-            MP4File::AddParsingError(&m_trakAtom, SPECIFICATION_ERROR, "stsd has no entries.");
+            file.AddParsingError(&m_trakAtom, SPECIFICATION_ERROR, "stsd has no entries.");
         }
     }
 
     // was everything found?
     if (!success && m_trackId != MP4_INVALID_TRACK_ID) {
-        MP4File::AddParsingError(&m_trakAtom, MALFORMED_ATOM_ERROR("trak"), "Invalid track");
+        file.AddParsingError(&m_trakAtom, MALFORMED_ATOM_ERROR("trak"), "Invalid track");
         //throw new EXCEPTION("invalid track");
     }
     CalculateBytesPerSample();
@@ -409,7 +410,7 @@ void MP4Track::ReadSample(
         else {
             if( sampleId > m_sdtpLog.size() ) {
                 std::string errorMsg = std::string("sample id ") + std::to_string(sampleId) + " > sdtp logsize " + std::to_string(m_sdtpLog.size());
-                MP4Atom::LogAtomError(&m_trakAtom, MALFORMED_ATOM_ERROR("sdtp"), errorMsg);
+                m_trakAtom.LogAtomError(MALFORMED_ATOM_ERROR("sdtp"), errorMsg);
                 *pNumBytes = 0;
                 return;
             }
@@ -1036,7 +1037,7 @@ uint32_t MP4Track::GetSampleStscIndex(MP4SampleId sampleId)
                 std::string errorMsg = std::string("First stsc entry 'firstSample' must be greater than sampleID. Expected = ") +
                                        std::to_string(sampleId) + ", Actual = " + std::to_string(m_pStscFirstSampleProperty->GetValue(stscIndex));
 
-                MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stsc", stscIndex), errorMsg);
+                m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stsc", stscIndex), errorMsg);
                 return ((uint32_t)-1);
             }
 
@@ -1051,7 +1052,7 @@ uint32_t MP4Track::GetSampleStscIndex(MP4SampleId sampleId)
     return stscIndex;
 }
 
-std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
+const char* MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 {
     if (!m_hasSampleTables) {
         return "Error";
@@ -1066,7 +1067,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 
     // check if the answer will be the same as last time
     if( m_lastStsdIndex && stsdIndex == m_lastStsdIndex )
-        return m_lastSampleFileURL;
+        return m_lastSampleFileURL.c_str();
 
     MP4Atom* pStsdAtom = m_trakAtom.FindAtom( "trak.mdia.minf.stbl.stsd" );
     if (pStsdAtom == NULL) {
@@ -1075,7 +1076,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 
     MP4Atom* pStsdEntryAtom = pStsdAtom->GetChildAtom( stsdIndex - 1 );
     if (pStsdEntryAtom == NULL) {
-        MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stsd", stsdIndex - 1), std::string());
+        m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stsd", stsdIndex - 1), std::string());
         return "Error";
     }
 
@@ -1093,17 +1094,17 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
         if ( pFtypAtom == NULL ) {
             m_lastStsdIndex = stsdIndex;
             m_lastSampleFileURL = "";
-            return m_lastSampleFileURL;
+            return m_lastSampleFileURL.c_str();
         }
 
         // ... but most often it is present with a "qt  " value
         if ( strequal( pFtypAtom->majorBrand.GetValue(), "qt  " ) ) {
             m_lastStsdIndex = stsdIndex;
             m_lastSampleFileURL = "";
-            return m_lastSampleFileURL;
+            return m_lastSampleFileURL.c_str();
         }
 
-        MP4Atom::LogAtomError(&m_trakAtom, MISSING_PROPERTY_ERROR("stsd.*.dataReferenceIndex"), std::string());
+        m_trakAtom.LogAtomError(MISSING_PROPERTY_ERROR("stsd.*.dataReferenceIndex"), std::string());
         return "Error";
         //throw new EXCEPTION("invalid stsd entry");
     }
@@ -1118,7 +1119,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
     MP4Atom* pUrlAtom = pDrefAtom->GetChildAtom( drefIndex - 1 );
     if (pUrlAtom == NULL) {
         std::string errorMsg = std::string("invalid dref entry: ") + std::to_string(drefIndex - 1);
-        MP4Atom::LogAtomError(&m_trakAtom, INVALID_PROPERTY_VALUE_ERROR("stsd.*.dataReferenceIndex"), errorMsg);
+        m_trakAtom.LogAtomError(INVALID_PROPERTY_VALUE_ERROR("stsd.*.dataReferenceIndex"), errorMsg);
         return "Error";
     }
 
@@ -1132,7 +1133,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
     else {
         MP4StringProperty* pLocationProperty = NULL;
         if (!pUrlAtom->FindProperty( "*.location", (MP4Property**)&pLocationProperty) || pLocationProperty == NULL) {
-            MP4Atom::LogAtomError(&m_trakAtom, MISSING_PROPERTY_ERROR("dref.*.location"), std::string());
+            m_trakAtom.LogAtomError(MISSING_PROPERTY_ERROR("dref.*.location"), std::string());
             return "Error";
             //throw new EXCEPTION("invalid dref entry");
         }
@@ -1144,7 +1145,7 @@ std::string MP4Track::GetSampleFileURL(MP4SampleId sampleId)
 
     m_lastStsdIndex = stsdIndex;
     m_lastSampleFileURL = url;
-    return url;
+    return m_lastSampleFileURL.c_str();
 }
 
 File* MP4Track::GetSampleFile( MP4SampleId sampleId )
@@ -1166,15 +1167,15 @@ File* MP4Track::GetSampleFile( MP4SampleId sampleId )
     if( m_lastStsdIndex && stsdIndex == m_lastStsdIndex )
         return m_lastSampleFile;
 
-    std::string url = GetSampleFileURL( sampleId );
-    if (url.empty()) {
+    const char* url = GetSampleFileURL( sampleId );
+    if (!strlen(url)) {
         file = NULL; // self-contained
     }
-    else if (url.compare("Error") != 0) {
+    else if (!strequal(url,"Error")) {
         // attempt to open url if it's a file url
         // currently this is the only thing we understand
-        if( strnequal( url.c_str(), "file:", 5 )) {
-            const char* fileName = url.c_str() + 5;
+        if( strequal(url, "file:")) {
+            const char* fileName = url + 5;
 
             if( strnequal(fileName, "//", 2 ))
                 fileName = strchr( fileName + 2, '/' );
@@ -1224,7 +1225,7 @@ uint64_t MP4Track::GetSampleFileOffset(MP4SampleId sampleId)
         m_pStscSamplesPerChunkProperty->GetValue(stscIndex);
 
     if (samplesPerChunk == 0) {
-        MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stsc", stscIndex), "Invalid number of 'samplesPerChunk' in stsc entry = 0");
+        m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stsc", stscIndex), "Invalid number of 'samplesPerChunk' in stsc entry = 0");
         //throw new EXCEPTION("Invalid number of samples in stsc entry");
         return ((uint64_t)-1);
     }
@@ -1394,7 +1395,7 @@ void MP4Track::GetSampleTimes(MP4SampleId sampleId,
     }
 
     std::string errorMsg = std::string("Sample ID ") + std::to_string(sampleId) + " out of range";
-    MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stts", numStts), errorMsg);
+    m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stts", numStts), errorMsg);
     //throw new EXCEPTION("sample id out of range");
 }
 
@@ -1417,7 +1418,7 @@ MP4SampleId MP4Track::GetSampleIdFromTime(
             m_pSttsSampleDeltaProperty->GetValue(sttsIndex);
 
         if (sampleDelta == 0 && sttsIndex < numStts - 1) {
-            MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stts", sttsIndex), "Invalid sample duration = 0");
+            m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stts", sttsIndex), "Invalid sample duration = 0");
         }
 
         MP4Duration d = when - elapsed;
@@ -1439,7 +1440,7 @@ MP4SampleId MP4Track::GetSampleIdFromTime(
     }
 
     std::string errorMsg = std::string("Sample time ") + std::to_string(when) + " out of range";
-    MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stts", numStts), errorMsg);
+    m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stts", numStts), errorMsg);
     //throw new EXCEPTION("time out of range");
 
     return MP4_INVALID_SAMPLE_ID;
@@ -1502,7 +1503,7 @@ uint32_t MP4Track::GetSampleCttsIndex(MP4SampleId sampleId,
     }
 
     std::string errorMsg = std::string("Sample ID ") + std::to_string(sampleId) + " out of range";
-    MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("ctts", numCtts), errorMsg);
+    m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("ctts", numCtts), errorMsg);
     //throw new EXCEPTION("sample id out of range");
     return ((uint32_t)-1);
 }
@@ -1866,7 +1867,7 @@ uint32_t MP4Track::GetChunkStscIndex(MP4ChunkId chunkId)
                 std::string errorMsg = std::string("First stsc entry 'firstChunk' must be greater than chunkID. Expected = ") +
                                        std::to_string(chunkId) + ", Actual = " + std::to_string(m_pStscFirstChunkProperty->GetValue(stscIndex));
 
-                MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("stsc", stscIndex), errorMsg);
+                m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("stsc", stscIndex), errorMsg);
                 return ((uint32_t)-1);
             }
 
@@ -2245,7 +2246,7 @@ MP4SampleId MP4Track::GetSampleIdFromEditTime(
         }
 
         std::string errorMsg = std::string("Sample time ") + std::to_string(editWhen) + " out of range";
-        MP4Atom::LogAtomError(&m_trakAtom, INVALID_TABLE_ENTRY_ERROR("elst", numEdits), errorMsg);
+        m_trakAtom.LogAtomError(INVALID_TABLE_ENTRY_ERROR("elst", numEdits), errorMsg);
         //throw new EXCEPTION("time out of range");
 
     } else { // no edit list
@@ -2293,6 +2294,16 @@ MP4Duration MP4Track::GetDurationPerChunk()
 void MP4Track::SetDurationPerChunk( MP4Duration duration )
 {
     m_durationPerChunk = duration;
+}
+
+mp4v2::impl::Log& MP4Track::Logger()
+{
+    return m_File.Logger();
+}
+
+const mp4v2::impl::Log& MP4Track::Logger() const
+{
+    return m_File.Logger();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

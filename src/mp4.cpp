@@ -127,6 +127,9 @@ MP4FileHandle MP4ReadCallbacks( const MP4IOCallbacks* callbacks, void* handle )
     if (!pFile)
         return MP4_INVALID_FILE_HANDLE;
 
+    pFile->Logger().setLogCallback(callbacks->log_callback, handle);
+    pFile->Logger().setVerbosity(callbacks->log_level);
+
     try {
         pFile->Read( NULL, NULL, callbacks, handle );
         return (MP4FileHandle)pFile;
@@ -3278,7 +3281,7 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
     {
         if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
             try {
-                return ((MP4File*)hFile)->GetSampleFileURL(trackId, sampleId).c_str();
+                return ((MP4File*)hFile)->GetSampleFileURL(trackId, sampleId);
             }
             catch( Exception* x ) {
                 mp4v2::impl::log.errorf(*x);

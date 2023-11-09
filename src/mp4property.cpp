@@ -1033,10 +1033,10 @@ void MP4DescriptorProperty::Read(MP4File& file, uint32_t index)
     char errorMsg[80];
     if (m_mandatory && m_pDescriptors.Size() == 0) {
         sprintf(errorMsg, "Mandatory descriptor 0x%02x missing", m_tagsStart);
-        MP4File::AddParsingError(&m_parentAtom, SPECIFICATION_ERROR, errorMsg);
+        file.AddParsingError(&m_parentAtom, SPECIFICATION_ERROR, errorMsg);
     } else if (m_onlyOne && m_pDescriptors.Size() > 1) {
         sprintf(errorMsg, "Only one descriptor 0x%02x allowed", m_tagsStart);
-        MP4File::AddParsingError(&m_parentAtom, SPECIFICATION_ERROR, errorMsg);
+        file.AddParsingError(&m_parentAtom, SPECIFICATION_ERROR, errorMsg);
     }
 }
 

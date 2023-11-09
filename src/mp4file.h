@@ -239,7 +239,7 @@ public:
     bool GetSampleSync(
         MP4TrackId trackId, MP4SampleId sampleId);
 
-    std::string GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId);
+    const char* GetSampleFileURL(MP4TrackId trackId, MP4SampleId sampleId);
 
     void ReadSample(
         // input parameters
@@ -904,7 +904,9 @@ public:
         MP4Atom* pAncestorAtom,
         const char* childName);
 
-    static void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
+    mp4v2::impl::Log& Logger() { return m_log; }
+    const mp4v2::impl::Log& Logger() const { return m_log; }
+    void AddParsingError(MP4Atom *atom, const std::string& category, const std::string& errorMsg, MP4LogLevel level = MP4_LOG_ERROR);
 
 protected:
     void Init();
@@ -1054,7 +1056,8 @@ protected:
         std::string errorMsg;
         MP4LogLevel level;
     } ParsingError;
-    static std::list<ParsingError> m_parsingErrors;
+    std::list<ParsingError> m_parsingErrors;
+    mp4v2::impl::Log m_log;
 
  private:
     MP4File ( const MP4File &src );

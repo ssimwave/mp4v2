@@ -78,7 +78,7 @@ public:
         return m_trakAtom;
     }
 
-    std::string GetSampleFileURL(MP4SampleId sampleId);
+    const char* GetSampleFileURL(MP4SampleId sampleId);
 
     void ReadSample(
         // input parameters
@@ -173,6 +173,9 @@ public:
 
     MP4Duration GetDurationPerChunk();
     void        SetDurationPerChunk( MP4Duration );
+
+    mp4v2::impl::Log& Logger();
+    const mp4v2::impl::Log& Logger() const;
 
 protected:
     bool        InitEditListProperties();
