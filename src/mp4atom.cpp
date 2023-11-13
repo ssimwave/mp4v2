@@ -538,15 +538,14 @@ void MP4Atom::ReadChildAtoms()
         MP4AtomInfo* pChildAtomInfo = FindAtomInfo(pChildAtom->GetType());
 
         // If it's root atom, and child atom is unexpected, log an error,
-        // otherwise if child atom is of known type
-        // but not expected here log warning
+        // otherwise log info
         if (pChildAtomInfo == NULL && IsRootAtom()) {
             std::string errorMsg = std::string("Unexpected root level atom '") + pChildAtom->GetType() + "'";
             GetFile().AddParsingError(this, SPECIFICATION_ERROR, errorMsg);
         }
         else if (pChildAtomInfo == NULL && !this_is_udta) {
             std::string errorMsg = std::string("Unexpected child atom '") + pChildAtom->GetType() + "' in '" + GetType() + "'";
-            GetFile().AddParsingError(this, SPECIFICATION_ERROR, errorMsg, MP4_LOG_WARNING);
+            GetFile().AddParsingError(this, SPECIFICATION_ERROR, errorMsg, MP4_LOG_INFO);
         }
 
         // if child atoms should have just one instance
@@ -979,6 +978,10 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
             break;
 
         case 'f':
+            if( ATOMID(type) == ATOMID("fl32") )
+                return new MP4SoundAtom( file, type );
+            if( ATOMID(type) == ATOMID("fl64") )
+                return new MP4SoundAtom( file, type );
             if( ATOMID(type) == ATOMID("free") )
                 return new MP4FreeAtom(file);
             if( ATOMID(type) == ATOMID("ftyp") )
@@ -1007,6 +1010,10 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
             if( ATOMID(type) == ATOMID("ipir") )
                 return new MP4TrefTypeAtom( file, type );
             if( ATOMID(type) == ATOMID("ima4") )
+                return new MP4SoundAtom( file, type );
+            if( ATOMID(type) == ATOMID("in24") )
+                return new MP4SoundAtom( file, type );
+            if( ATOMID(type) == ATOMID("in32") )
                 return new MP4SoundAtom( file, type );
             if( ATOMID(type) == ATOMID("ipcm") )
                 return new MP4SoundAtom( file, type );
@@ -1126,6 +1133,11 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
         case 'y':
             if( ATOMID(type) == ATOMID("yuv2") )
                 return new MP4VideoAtom( file, type );
+            break;
+
+        case '.':
+            if( ATOMID(type) == ATOMID(".mp3") )
+                return new MP4SoundAtom( file, type );
             break;
 
         default:

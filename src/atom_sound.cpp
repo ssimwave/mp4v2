@@ -62,7 +62,7 @@ void MP4SoundAtom::AddProperties (uint8_t version)
         AddProperty( /* 7 */
             new MP4Integer16Property(*this, "packetSize"));
         AddProperty( /* 8 */
-            new MP4Integer16Property(*this, "timeScale"));
+            new MP4Integer16Property(*this, "samplerate"));
         AddProperty( /* 9 */
             new MP4Integer16Property(*this, "reserved3"));
     }
@@ -90,7 +90,7 @@ void MP4SoundAtom::AddProperties (uint8_t version)
         AddProperty( /* 9 */
             new MP4Integer32Property(*this, "sizeOfStructOnly"));
         AddProperty( /* 10 */
-            new MP4Float64Property(*this, "timeScale"));
+            new MP4Float64Property(*this, "samplerate"));
         AddProperty( /* 11 */
             new MP4Integer32Property(*this, "channels")); //numAudioChannels
         AddProperty( /* 12 */
