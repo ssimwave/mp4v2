@@ -3811,18 +3811,21 @@ MP4Duration MP4File::GetTrackFixedSampleDuration(MP4TrackId trackId)
 
 double MP4File::GetTrackVideoFrameRate(MP4TrackId trackId)
 {
-    MP4SampleId numSamples =
-        GetTrackNumberOfSamples(trackId);
-    uint64_t
-    msDuration =
-        ConvertFromTrackDuration(trackId,
-                                 GetTrackDuration(trackId), MP4_MSECS_TIME_SCALE);
+    double numSamples = (double)GetTrackNumberOfSamples(trackId);
 
-    if (msDuration == 0) {
+    double trackDuration = (double)GetTrackDuration(trackId);
+    uint32_t trackTimeScale = GetTrackTimeScale(trackId);
+
+    if (trackDuration == 0) {
         return 0.0;
     }
 
-    return ((double)numSamples / double(msDuration)) * MP4_MSECS_TIME_SCALE;
+    double frameRate = numSamples / trackDuration;
+    frameRate *= trackTimeScale;
+    return frameRate;
+
+    //uint64_t msDuration = ConvertFromTrackDuration(trackId, trackDuration, MP4_MSECS_TIME_SCALE);
+    //return ((double)numSamples / double(msDuration)) * MP4_MSECS_TIME_SCALE;
 }
 
 int MP4File::GetTrackAudioChannels (MP4TrackId trackId)

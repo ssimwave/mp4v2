@@ -59,6 +59,17 @@ MP4VideoAtom::MP4VideoAtom (MP4File &file, const char *type)
     ExpectChildAtom("pasp", Optional, OnlyOne);
     ExpectChildAtom("clap", Optional, OnlyOne);
     ExpectChildAtom("fiel", Optional, OnlyOne);
+
+    if (ATOMID(type) == ATOMID("AVdh") || ATOMID(type) == ATOMID("AVdn")) {
+        ExpectChildAtom("ACLR", Optional, OnlyOne); // Avid DNxHD color sampling type
+        ExpectChildAtom("APRG", Optional, OnlyOne); // Avid DNxHD progressive type 
+        ExpectChildAtom("ARES", Optional, OnlyOne); // Avid DNxHD color sampling type
+    }
+
+    if (ATOMID(type) == ATOMID("mjp2")) {
+        ExpectChildAtom("jp2p", Optional, OnlyOne); // MJPEG profile box: unsigned int(32)[] compatible_brands;
+        ExpectChildAtom("jp2x", Optional, OnlyOne); // MJPEG prefix box: int(8)[] data; // the data is the initial codestream part
+    }
 }
 
 void MP4VideoAtom::Generate()
