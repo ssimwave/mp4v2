@@ -942,6 +942,16 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
                 return new MP4SoundAtom( file, type );
             break;
 
+        case 'A':
+            // AVID video
+            if( ATOMID(type) == ATOMID("AVdh") ||
+                ATOMID(type) == ATOMID("AVdn") ||
+                ATOMID(type) == ATOMID("AVdv") ||
+                ATOMID(type) == ATOMID("AVd1") ) {
+                    return new MP4VideoAtom(file, type);
+                }
+            break;
+
         case 'c':
             if( ATOMID(type) == ATOMID("chap") )
                 return new MP4TrefTypeAtom( file, type );
@@ -964,6 +974,30 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
                 return new MP4DAc3Atom(file);
             if( ATOMID(type) == ATOMID("dec3") )
                 return new MP4DEc3Atom(file);
+
+            // DV video
+            if( ATOMID(type) == ATOMID("dv5n") ||
+                ATOMID(type) == ATOMID("dv5p") ||
+                ATOMID(type) == ATOMID("dvc ") ||
+                ATOMID(type) == ATOMID("dvcp") ||
+                ATOMID(type) == ATOMID("dvpp") ||
+                ATOMID(type) == ATOMID("dvhq") ||
+                ATOMID(type) == ATOMID("dvhp") ||
+                ATOMID(type) == ATOMID("dvl ") ||
+                ATOMID(type) == ATOMID("dvlp") ||
+                ATOMID(type) == ATOMID("dvsd") ||
+                ATOMID(type) == ATOMID("dvhd") ||
+                ATOMID(type) == ATOMID("dv25") ||
+                ATOMID(type) == ATOMID("dv50") ||
+                ATOMID(type) == ATOMID("dvsl") ||
+                ATOMID(type) == ATOMID("dvh1") ||
+                ATOMID(type) == ATOMID("dvh2") ||
+                ATOMID(type) == ATOMID("dvh3") ||
+                ATOMID(type) == ATOMID("dvh4") ||
+                ATOMID(type) == ATOMID("dvh5") ||
+                ATOMID(type) == ATOMID("dvh6") ) {
+                    return new MP4VideoAtom(file, type);
+                }
             break;
 
         case 'e':
@@ -1036,6 +1070,11 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
                 return new MP4MvhdAtom(file);
             if( ATOMID(type) == ATOMID("mdat") )
                 return new MP4MdatAtom(file);
+            if( ATOMID(type) == ATOMID("mjp2") ||
+                ATOMID(type) == ATOMID("mjpa") ||   // Motion JPEG format A
+                ATOMID(type) == ATOMID("mjpb") ) {  // Motion JPEG format B
+                    return new MP4VideoAtom(file, type);
+                }
             if( ATOMID(type) == ATOMID("mpod") )
                 return new MP4TrefTypeAtom( file, type );
             if( ATOMID(type) == ATOMID("mp4a") )
@@ -1044,6 +1083,16 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
                 return new MP4Mp4sAtom(file);
             if( ATOMID(type) == ATOMID("mp4v") )
                 return new MP4Mp4vAtom(file);
+
+            // XDCAM MPEG-2 IMX video
+            if( ATOMID(type) == ATOMID("mx5n") ||
+                ATOMID(type) == ATOMID("mx5p") ||
+                ATOMID(type) == ATOMID("mx4n") ||
+                ATOMID(type) == ATOMID("mx4p") ||
+                ATOMID(type) == ATOMID("mx3n") ||
+                ATOMID(type) == ATOMID("mx3p") ) {
+                    return new MP4VideoAtom(file, type);
+                }
             break;
 
         case 'n':
@@ -1129,6 +1178,39 @@ MP4Atom::factory( MP4File &file, MP4Atom* parent, const char* type )
             if( ATOMID(type) == ATOMID("vmhd") )
                 return new MP4VmhdAtom(file);
             break;
+
+        case 'x':
+            // XDCAM MPEG-2 video
+            if( ATOMID(type) == ATOMID("xd51") ||
+                ATOMID(type) == ATOMID("xd54") ||
+                ATOMID(type) == ATOMID("xd55") ||
+                ATOMID(type) == ATOMID("xd59") ||
+                ATOMID(type) == ATOMID("xd5a") ||
+                ATOMID(type) == ATOMID("xd5b") ||
+                ATOMID(type) == ATOMID("xd5c") ||
+                ATOMID(type) == ATOMID("xd5d") ||
+                ATOMID(type) == ATOMID("xd5e") ||
+                ATOMID(type) == ATOMID("xd5f") ||
+                ATOMID(type) == ATOMID("xdv1") ||
+                ATOMID(type) == ATOMID("xdv2") ||
+                ATOMID(type) == ATOMID("xdv3") ||
+                ATOMID(type) == ATOMID("xdv4") ||
+                ATOMID(type) == ATOMID("xdv5") ||
+                ATOMID(type) == ATOMID("xdv6") ||
+                ATOMID(type) == ATOMID("xdv7") ||
+                ATOMID(type) == ATOMID("xdv8") ||
+                ATOMID(type) == ATOMID("xdv9") ||
+                ATOMID(type) == ATOMID("xdva") ||
+                ATOMID(type) == ATOMID("xdvb") ||
+                ATOMID(type) == ATOMID("xdvc") ||
+                ATOMID(type) == ATOMID("xdvd") ||
+                ATOMID(type) == ATOMID("xdve") ||
+                ATOMID(type) == ATOMID("xdvf") ||
+                ATOMID(type) == ATOMID("xdhd") ||
+                ATOMID(type) == ATOMID("xdh2") ) {
+                    return new MP4VideoAtom(file, type);
+                }
+                break;
 
         case 'y':
             if( ATOMID(type) == ATOMID("yuv2") )
