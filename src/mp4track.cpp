@@ -1080,10 +1080,30 @@ const char* MP4Track::GetSampleFileURL(MP4SampleId sampleId)
         return "Error";
     }
 
+    // Parse dataReferenceIndex from known stsd descriptor
+    // If it's not defined stsd descriptor, check for general data property,
+    // and parse dataReferenceIndex from it
+    uint32_t drefIndex = 0;
     MP4Integer16Property* pDrefIndexProperty = NULL;
-    if( !pStsdEntryAtom->FindProperty( "*.dataReferenceIndex", (MP4Property**)&pDrefIndexProperty ) ||
-        pDrefIndexProperty == NULL )
-    {
+    MP4BytesProperty* dataProperty = NULL;
+    if(pStsdEntryAtom->FindProperty("*.dataReferenceIndex", (MP4Property**)&pDrefIndexProperty) && pDrefIndexProperty != NULL) {
+        drefIndex = pDrefIndexProperty->GetValue();
+    }
+    else if (pStsdEntryAtom->FindProperty("*.data", (MP4Property**)&dataProperty) && dataProperty != NULL) {
+        uint8_t* data = NULL;
+        uint32_t dataSize = 0;
+        dataProperty->GetValue(&data, &dataSize);
+        if (dataSize >= 8) {
+            // General track descriptor data:
+            //      Reserved:           6 bytes
+            //      DataReferenceIndex: 2 bytes
+            uint8_t* cur = data + 6;
+            drefIndex = (cur[0] << 8 | cur[1]);
+        }
+
+        MP4Free(data);
+    }
+    else {
         // mp4v2 does not know about Apple-specific atoms in MOV files so may fail to find
         // the DataReferenceIndex. In that case, we'll handle it the same as the "media data
         // in local file" case... for our purposes, we don't care about cases where the
@@ -1103,13 +1123,13 @@ const char* MP4Track::GetSampleFileURL(MP4SampleId sampleId)
             m_lastSampleFileURL = "";
             return m_lastSampleFileURL.c_str();
         }
+    }
 
+    if (drefIndex == 0) {
         m_trakAtom.LogAtomError(MISSING_PROPERTY_ERROR("stsd.*.dataReferenceIndex"), std::string());
         return "Error";
         //throw new EXCEPTION("invalid stsd entry");
     }
-
-    uint32_t drefIndex = pDrefIndexProperty->GetValue();
 
     MP4Atom* pDrefAtom = m_trakAtom.FindAtom( "trak.mdia.minf.dinf.dref" );
     if (pDrefAtom == NULL) {
