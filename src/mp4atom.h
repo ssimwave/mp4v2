@@ -67,6 +67,9 @@ public:
     static MP4Atom* ReadAtom( MP4File& file, MP4Atom* pParentAtom );
     static MP4Atom* CreateAtom( MP4File& file, MP4Atom* parent, const char* type );
     static bool IsReasonableType( const char* type );
+    const char* GetReasonableType() {
+        return IsReasonableType(GetType()) ? GetType() : "????";
+    };
 
 private:
     static MP4Atom* factory( MP4File &file, MP4Atom* parent, const char* type );
