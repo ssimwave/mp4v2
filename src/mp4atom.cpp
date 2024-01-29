@@ -480,11 +480,6 @@ bool MP4Atom::ReadProperties(uint32_t startIndex, uint32_t count)
             oss << "Invalid atom size, overrun at property '" << m_pProperties[i]->GetName() << "'";
             GetFile().AddParsingError(this, MALFORMED_ATOM_ERROR(GetReasonableType()), oss.str());
 
-            // Delete this property and any subsequent properties
-            // Reset the file position to the end of the atom, and continue parsing
-            for (uint32_t j = m_pProperties.Size() - 1; j >= i; j--) {
-                m_pProperties.Delete(j);
-            }
             m_File.SetPosition(m_end);
 
             //throw new EXCEPTION(errorMsg.c_str());
